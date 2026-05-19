@@ -1,0 +1,49 @@
+$kind: http-request
+name: Update Urge Log
+method: PUT
+url: '{{baseUrl}}/api/urge-logs/{{urgeLogId}}'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "triggerText": "Updated trigger text",
+      "obsessionText": "Updated obsession",
+      "compulsionUrge": "Updated compulsion urge",
+      "intensityBefore": 7,
+      "delayMinutes": 10,
+      "intensityAfter": 3,
+      "compulsionPerformed": true
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response id matches updated id", function () {
+          var jsonData = pm.response.json();
+          var requestedId = parseInt(pm.collectionVariables.get("urgeLogId"));
+          pm.expect(jsonData.id).to.eql(requestedId);
+      });
+
+      pm.test("triggerText was updated correctly", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.triggerText).to.eql("Updated trigger text");
+      });
+
+      pm.test("compulsionPerformed was updated correctly", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.compulsionPerformed).to.eql(true);
+      });
+
+      pm.test("intensityBefore is within valid range (1-10)", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.intensityBefore).to.be.at.least(1);
+          pm.expect(jsonData.intensityBefore).to.be.at.most(10);
+      });

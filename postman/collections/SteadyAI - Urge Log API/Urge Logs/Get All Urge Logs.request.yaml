@@ -1,0 +1,34 @@
+$kind: http-request
+name: Get All Urge Logs
+method: GET
+url: '{{baseUrl}}/api/urge-logs'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response is an array", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.be.an("array");
+      });
+
+      pm.test("Each log has required fields", function () {
+          var jsonData = pm.response.json();
+          if (jsonData.length > 0) {
+              var log = jsonData[0];
+              pm.expect(log).to.have.property("id");
+              pm.expect(log).to.have.property("triggerText");
+              pm.expect(log).to.have.property("compulsionUrge");
+              pm.expect(log).to.have.property("intensityBefore");
+              pm.expect(log).to.have.property("compulsionPerformed");
+              pm.expect(log).to.have.property("createdAt");
+          }
+      });
+
+      pm.test("Response time is less than 2000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });

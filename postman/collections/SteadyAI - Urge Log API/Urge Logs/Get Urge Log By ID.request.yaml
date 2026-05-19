@@ -1,0 +1,40 @@
+$kind: http-request
+name: Get Urge Log By ID
+method: GET
+url: '{{baseUrl}}/api/urge-logs/{{urgeLogId}}'
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200 OK", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response id matches requested id", function () {
+          var jsonData = pm.response.json();
+          var requestedId = parseInt(pm.collectionVariables.get("urgeLogId"));
+          pm.expect(jsonData.id).to.eql(requestedId);
+      });
+
+      pm.test("Response has all expected fields", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("id");
+          pm.expect(jsonData).to.have.property("triggerText");
+          pm.expect(jsonData).to.have.property("compulsionUrge");
+          pm.expect(jsonData).to.have.property("intensityBefore");
+          pm.expect(jsonData).to.have.property("delayMinutes");
+          pm.expect(jsonData).to.have.property("compulsionPerformed");
+          pm.expect(jsonData).to.have.property("createdAt");
+      });
+
+      pm.test("intensityBefore is within valid range (1-10)", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.intensityBefore).to.be.at.least(1);
+          pm.expect(jsonData.intensityBefore).to.be.at.most(10);
+      });
+
+      pm.test("delayMinutes is one of allowed values (0, 2, 5, 10, 15)", function () {
+          var jsonData = pm.response.json();
+          pm.expect([0, 2, 5, 10, 15]).to.include(jsonData.delayMinutes);
+      });

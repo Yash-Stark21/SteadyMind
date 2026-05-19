@@ -44,9 +44,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers(PathRequest.toH2Console())
-                )
+                .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.sameOrigin())
                 )

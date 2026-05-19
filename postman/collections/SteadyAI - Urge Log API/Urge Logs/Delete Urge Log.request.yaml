@@ -1,0 +1,16 @@
+$kind: http-request
+name: Delete Urge Log
+method: DELETE
+url: '{{baseUrl}}/api/urge-logs/{{urgeLogId}}'
+order: 5000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 204 No Content", function () {
+          pm.response.to.have.status(204);
+      });
+
+      pm.test("Response body is empty", function () {
+          pm.expect(pm.response.text()).to.be.empty;
+      });

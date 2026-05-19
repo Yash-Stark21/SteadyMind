@@ -1,0 +1,51 @@
+$kind: http-request
+name: Create Urge Log
+method: POST
+url: '{{baseUrl}}/api/urge-logs'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "triggerText": "Saw a news article about contamination",
+      "obsessionText": "What if I got contaminated?",
+      "compulsionUrge": "Wash hands repeatedly",
+      "intensityBefore": 8,
+      "delayMinutes": 5,
+      "intensityAfter": 4,
+      "compulsionPerformed": false
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 201 Created", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has an id", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("id");
+          pm.expect(jsonData.id).to.be.a("number");
+          // Save the id for use in subsequent requests
+          pm.collectionVariables.set("urgeLogId", jsonData.id);
+      });
+
+      pm.test("Response contains correct triggerText", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.triggerText).to.eql("Saw a news article about contamination");
+      });
+
+      pm.test("intensityBefore is within valid range (1-10)", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.intensityBefore).to.be.at.least(1);
+          pm.expect(jsonData.intensityBefore).to.be.at.most(10);
+      });
+
+      pm.test("Response has createdAt timestamp", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property("createdAt");
+      });
