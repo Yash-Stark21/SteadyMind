@@ -4,5 +4,6 @@ public enum ExposureStatus {
     PENDING,
     IN_PROGRESS,
     COMPLETED,
-    SKIPPED
+    SKIPPED,
+    PLANNED
 }

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Reusable navbar fragment included via th:replace in all pages -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark steadyai-navbar">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/dashboard}">
+            <span class="brand-icon">🧘</span> SteadyMind
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/urge-logs}">Moment Logs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/urge-logs/new}">+ Log a Moment</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/exposures}">Growth Challenges</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/exposures/new}">+ New Challenge</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/ai-coach}">AI Coach</a>
+                </li>
+            </ul>
+            <form th:action="@{/logout}" method="post" class="d-flex">
+                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>
