@@ -42,4 +42,15 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+    
+    @ExceptionHandler(InvalidStateException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStateException(InvalidStateException ex) {
+        Map<String, Object> errorDetails = new HashMap<>();
+        errorDetails.put("timestamp", LocalDateTime.now());
+        errorDetails.put("status", HttpStatus.CONFLICT.value());
+        errorDetails.put("error", "Conflict");
+        errorDetails.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
 }
