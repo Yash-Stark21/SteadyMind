@@ -81,7 +81,9 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
     public List<CompulsionDelayAttemptResponse> getAllDelayAttemptsForCurrentUser() {
         User user = getDemoUser();
         List<CompulsionDelayAttempt> attempts = delayAttemptRepository.findByUserOrderByCreatedAtDesc(user);
-        return attempts.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return attempts.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
