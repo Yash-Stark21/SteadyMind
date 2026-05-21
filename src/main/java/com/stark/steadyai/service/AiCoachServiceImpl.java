@@ -32,15 +32,18 @@ public class AiCoachServiceImpl implements AiCoachService {
     private final AiClient aiClient;
     private final AiSafetyService aiSafetyService;
     private final AiPolicyService aiPolicyService;
+    private final com.stark.steadyai.ai.AiResponseValidator aiResponseValidator;
 
     public AiCoachServiceImpl(AiMessageRepository aiMessageRepository,
                               AiClient aiClient,
                               AiSafetyService aiSafetyService,
-                              AiPolicyService aiPolicyService) {
+                              AiPolicyService aiPolicyService,
+                              com.stark.steadyai.ai.AiResponseValidator aiResponseValidator) {
         this.aiMessageRepository = aiMessageRepository;
         this.aiClient = aiClient;
         this.aiSafetyService = aiSafetyService;
         this.aiPolicyService = aiPolicyService;
+        this.aiResponseValidator = aiResponseValidator;
     }
 
     // =========================================================================
@@ -71,6 +74,9 @@ public class AiCoachServiceImpl implements AiCoachService {
 
         // Step 3: Delegate to AI client
         responseDto = aiClient.generateResponse(requestDto);
+
+        // Step 3.5: Validate structural integrity of AI response
+        responseDto = aiResponseValidator.validateOrFallback(responseDto);
 
         // Step 4: Apply backend policy enforcement
         responseDto = aiPolicyService.applyPolicy(responseDto);
