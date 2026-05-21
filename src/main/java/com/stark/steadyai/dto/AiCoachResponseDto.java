@@ -3,10 +3,12 @@ package com.stark.steadyai.dto;
 import com.stark.steadyai.enums.CoachIntent;
 import com.stark.steadyai.enums.ResponseType;
 import com.stark.steadyai.enums.RiskLevel;
+import com.stark.steadyai.enums.SuggestedAction;
 
 /**
  * Response DTO returned after the AI Coach pipeline processes a user message.
- * Contains the original message, AI response, and all classification metadata.
+ * Contains the original message, AI response, classification metadata,
+ * and Day 8 policy-layer fields (directAnswerAllowed, userFacingMessage, suggestedAction).
  */
 public class AiCoachResponseDto {
 
@@ -15,6 +17,9 @@ public class AiCoachResponseDto {
     private CoachIntent intent;
     private RiskLevel riskLevel;
     private ResponseType responseType;
+    private boolean directAnswerAllowed;
+    private String userFacingMessage;
+    private SuggestedAction suggestedAction;
 
     public AiCoachResponseDto() {
     }
@@ -57,5 +62,29 @@ public class AiCoachResponseDto {
 
     public void setResponseType(ResponseType responseType) {
         this.responseType = responseType;
+    }
+
+    public boolean isDirectAnswerAllowed() {
+        return directAnswerAllowed;
+    }
+
+    public void setDirectAnswerAllowed(boolean directAnswerAllowed) {
+        this.directAnswerAllowed = directAnswerAllowed;
+    }
+
+    public String getUserFacingMessage() {
+        return userFacingMessage;
+    }
+
+    public void setUserFacingMessage(String userFacingMessage) {
+        this.userFacingMessage = userFacingMessage;
+    }
+
+    public SuggestedAction getSuggestedAction() {
+        return suggestedAction;
+    }
+
+    public void setSuggestedAction(SuggestedAction suggestedAction) {
+        this.suggestedAction = suggestedAction;
     }
 }
