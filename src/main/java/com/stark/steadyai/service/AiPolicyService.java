@@ -42,23 +42,27 @@ public class AiPolicyService {
             return buildSafeFallback();
         }
 
-        // Rule 2: HIGH risk override
-        if (aiResponse.getRiskLevel() == RiskLevel.HIGH) {
+        // Rule 2: Crisis intent override
+        if (aiResponse.getIntent() == CoachIntent.CRISIS_OR_SELF_HARM) {
             return buildCrisisOverride(aiResponse);
         }
 
-        // Rule 3: ERP redirect when direct answer is not allowed
-        if (!aiResponse.isDirectAnswerAllowed()
-                && aiResponse.getResponseType() == ResponseType.ERP_REDIRECT) {
+        // Rule 3: Out of scope intent override
+        if (aiResponse.getIntent() == CoachIntent.OUT_OF_SCOPE) {
+            return buildOutOfScopeOverride(aiResponse);
+        }
+
+        // Rule 4: ERP redirect when direct answer is not allowed
+        if (!aiResponse.isDirectAnswerAllowed()) {
             return buildErpRedirectOverride(aiResponse);
         }
 
-        // Rule 4: missing response type
+        // Rule 5: missing response type
         if (aiResponse.getResponseType() == null) {
             return buildSafeFallback();
         }
 
-        // Rule 5: blank user-facing message
+        // Rule 6: blank user-facing message
         if (aiResponse.getUserFacingMessage() == null
                 || aiResponse.getUserFacingMessage().isBlank()) {
             return buildSafeFallback();
@@ -73,6 +77,8 @@ public class AiPolicyService {
     // =========================================================================
 
     private AiCoachResponseDto buildCrisisOverride(AiCoachResponseDto original) {
+        original.setIntent(CoachIntent.CRISIS_OR_SELF_HARM);
+        original.setRiskLevel(RiskLevel.HIGH);
         original.setResponseType(ResponseType.CRISIS_STATIC_MESSAGE);
         original.setDirectAnswerAllowed(false);
         original.setUserFacingMessage(
@@ -83,7 +89,21 @@ public class AiPolicyService {
         return original;
     }
 
+    private AiCoachResponseDto buildOutOfScopeOverride(AiCoachResponseDto original) {
+        original.setIntent(CoachIntent.OUT_OF_SCOPE);
+        original.setRiskLevel(RiskLevel.LOW);
+        original.setResponseType(ResponseType.OUT_OF_SCOPE_MESSAGE);
+        original.setDirectAnswerAllowed(false);
+        original.setUserFacingMessage("I can only help with urge logging, exposure reflection, progress summaries, and non-diagnostic coping support inside SteadyAI.");
+        original.setSuggestedAction(SuggestedAction.NONE);
+        return original;
+    }
+
     private AiCoachResponseDto buildErpRedirectOverride(AiCoachResponseDto original) {
+        original.setIntent(CoachIntent.REASSURANCE_SEEKING);
+        original.setRiskLevel(RiskLevel.LOW);
+        original.setResponseType(ResponseType.ERP_REDIRECT);
+        original.setDirectAnswerAllowed(false);
         original.setUserFacingMessage(
                 "I cannot help you prove or disprove the fear. "
                         + "Let us practice sitting with uncertainty. "

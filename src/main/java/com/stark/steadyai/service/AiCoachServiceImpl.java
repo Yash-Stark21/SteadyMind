@@ -57,7 +57,7 @@ public class AiCoachServiceImpl implements AiCoachService {
         AiCoachResponseDto responseDto;
 
         // Step 1: Safety pre-check — crisis / self-harm
-        if (aiSafetyService.isCrisisMessage(userMessage)) {
+        if (aiSafetyService.isCrisisOrSelfHarm(userMessage)) {
             responseDto = aiSafetyService.buildCrisisResponse();
             responseDto.setUserMessage(userMessage);
             saveAuditRecord(user, userMessage, responseDto);
@@ -72,11 +72,15 @@ public class AiCoachServiceImpl implements AiCoachService {
             return responseDto;
         }
 
-        // Step 3: Delegate to AI client
-        responseDto = aiClient.generateResponse(requestDto);
+        try {
+            // Step 3: Delegate to AI client
+            responseDto = aiClient.generateResponse(requestDto);
 
-        // Step 3.5: Validate structural integrity of AI response
-        responseDto = aiResponseValidator.validateOrFallback(responseDto);
+            // Step 3.5: Validate structural integrity of AI response
+            aiResponseValidator.validate(responseDto);
+        } catch (Exception e) {
+            responseDto = aiResponseValidator.buildFallback();
+        }
 
         // Step 4: Apply backend policy enforcement
         responseDto = aiPolicyService.applyPolicy(responseDto);
@@ -110,15 +114,17 @@ public class AiCoachServiceImpl implements AiCoachService {
     private void saveAuditRecord(User user, String userMessage, AiCoachResponseDto responseDto) {
         AiMessage aiMessage = new AiMessage();
         aiMessage.setUser(user);
-        aiMessage.setUserMessage(userMessage);
+        
+        if (responseDto.getIntent() == com.stark.steadyai.enums.CoachIntent.CRISIS_OR_SELF_HARM) {
+            aiMessage.setUserMessage("[MINIMAL METADATA]");
+        } else {
+            aiMessage.setUserMessage(userMessage);
+        }
+        
         aiMessage.setIntent(responseDto.getIntent());
         aiMessage.setRiskLevel(responseDto.getRiskLevel());
         aiMessage.setResponseType(responseDto.getResponseType());
-        aiMessage.setAiResponse(
-                responseDto.getUserFacingMessage() != null
-                        ? responseDto.getUserFacingMessage()
-                        : responseDto.getAiResponse()
-        );
+        aiMessage.setAiResponse(responseDto.getUserFacingMessage());
         aiMessageRepository.save(aiMessage);
     }
 }

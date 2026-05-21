@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AiResponseValidator {
 
-    public AiCoachResponseDto validateOrFallback(AiCoachResponseDto response) {
+    public void validate(AiCoachResponseDto response) {
         if (response == null ||
             response.getIntent() == null ||
             response.getRiskLevel() == null ||
@@ -19,13 +19,10 @@ public class AiResponseValidator {
             response.getUserFacingMessage() == null ||
             response.getUserFacingMessage().isBlank()) {
             
-            return buildFallback();
+            throw new com.stark.steadyai.exception.InvalidAiResponseException("AI Response is missing required fields or has blank content.");
         }
-        
-        return response;
     }
-    
-    private AiCoachResponseDto buildFallback() {
+    public AiCoachResponseDto buildFallback() {
         AiCoachResponseDto fallback = new AiCoachResponseDto();
         fallback.setIntent(CoachIntent.OUT_OF_SCOPE);
         fallback.setRiskLevel(RiskLevel.LOW);

@@ -26,11 +26,14 @@ public class AiSafetyService {
     /**
      * Returns true if the message contains self-harm or suicide language.
      */
-    public boolean isCrisisMessage(String message) {
+    public boolean isCrisisOrSelfHarm(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
         String lower = message.toLowerCase();
         return containsAny(lower,
-                "suicide", "kill myself", "end my life",
-                "self harm", "self-harm", "hurt myself", "harm myself");
+                "kill myself", "hurt myself", "suicide", "end my life",
+                "self harm", "hurt someone", "danger right now");
     }
 
     /**
@@ -61,12 +64,15 @@ public class AiSafetyService {
      * not answered directly.
      */
     public boolean isReassuranceSeeking(String message) {
+        if (message == null || message.isBlank()) {
+            return false;
+        }
         String lower = message.toLowerCase();
         return containsAny(lower,
-                "promise", "guarantee", "confirm",
-                "sure nothing", "am i safe", "is it contaminated",
-                "should i check", "can you tell me for sure",
-                "am i contaminated", "did i harm someone");
+                "can you promise", "am i safe", "is it safe",
+                "am i contaminated", "did i contaminate", "should i check",
+                "should i wash", "should i confess", "nothing bad will happen",
+                "are you sure", "guarantee", "confirm that", "prove that");
     }
 
     /**
