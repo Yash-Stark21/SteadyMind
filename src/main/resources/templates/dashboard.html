@@ -86,19 +86,24 @@
     <!-- Quick Actions -->
     <h2 class="h5 fw-bold mb-3">Quick Actions</h2>
     <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a th:href="@{/urge-logs/new}" class="btn btn-primary btn-lg w-100 quick-action-btn">
                 <i class="bi bi-plus-circle me-2"></i>Log a Moment
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a th:href="@{/exposures/new}" class="btn btn-outline-primary btn-lg w-100 quick-action-btn">
                 <i class="bi bi-plus-circle me-2"></i>New Challenge
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a th:href="@{/ai-coach}" class="btn btn-outline-secondary btn-lg w-100 quick-action-btn">
                 <i class="bi bi-chat-dots me-2"></i>AI Coach
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a th:href="@{/weekly-summary}" class="btn btn-outline-info btn-lg w-100 quick-action-btn">
+                <i class="bi bi-calendar-check me-2"></i>Summary
             </a>
         </div>
     </div>

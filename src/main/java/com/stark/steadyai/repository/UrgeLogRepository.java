@@ -12,4 +12,6 @@ public interface UrgeLogRepository extends JpaRepository<UrgeLog, Long> {
     List<UrgeLog> findByUserOrderByCreatedAtDesc(User user);
 
     Optional<UrgeLog> findByIdAndUser(Long id, User user);
+
+    List<UrgeLog> findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(User user, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

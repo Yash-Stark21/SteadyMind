@@ -24,6 +24,20 @@ public class MockAiClient implements AiClient {
     public AiCoachResponseDto generateResponse(AiCoachRequestDto requestDto) {
         String message = requestDto.getMessage().trim().toLowerCase();
 
+        // --- Weekly Summary ---
+        if (containsAny(message, "weekly summary")) {
+            return buildResponse(
+                    CoachIntent.WEEKLY_SUMMARY,
+                    RiskLevel.LOW,
+                    ResponseType.REFLECTION_PROMPT,
+                    true,
+                    "Progress: You have been consistent with your logs this week. | "
+                            + "Patterns: We noticed urges are often tied to specific times of day. | "
+                            + "Steps: Try practicing a 5-minute delay when you feel the next urge.",
+                    SuggestedAction.NONE
+            );
+        }
+
         // --- Crisis / self-harm ---
         if (containsAny(message, "suicide", "kill myself", "end my life",
                 "self harm", "self-harm", "hurt myself", "harm myself")) {

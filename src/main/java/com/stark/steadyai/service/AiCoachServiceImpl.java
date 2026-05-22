@@ -13,14 +13,14 @@ import java.util.List;
 
 /**
  * Implementation of the AI Coach pipeline.
- *
+
  * Day 8 architecture:
  * 1. AiSafetyService pre-checks (crisis, reassurance-seeking)
  * 2. AiClient generates response (MockAiClient in mock-ai profile)
  * 3. AiPolicyService enforces final backend policy
  * 4. Audit record saved
  * 5. Safe response returned
- *
+
  * The AI model/client does not directly control the user-facing answer.
  * The backend policy layer decides what response is allowed.
  */

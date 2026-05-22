@@ -61,6 +61,11 @@ class AiCoachServiceTest {
         when(aiSafetyService.isReassuranceSeeking(any())).thenReturn(false);
         when(aiClient.generateResponse(any())).thenThrow(new RuntimeException("API down"));
         
+        AiCoachResponseDto fallbackResponse = new AiCoachResponseDto();
+        fallbackResponse.setResponseType(ResponseType.ERP_REDIRECT);
+        fallbackResponse.setUserFacingMessage("I cannot verify or disprove the fear for you");
+        when(aiResponseValidator.buildFallback()).thenReturn(fallbackResponse);
+        
         // Mock policy service to just return what it gets (fallback)
         when(aiPolicyService.applyPolicy(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -79,6 +84,11 @@ class AiCoachServiceTest {
         AiCoachResponseDto invalidResponse = new AiCoachResponseDto();
         when(aiClient.generateResponse(any())).thenReturn(invalidResponse);
         doThrow(new InvalidAiResponseException("Invalid")).when(aiResponseValidator).validate(invalidResponse);
+        
+        AiCoachResponseDto fallbackResponse = new AiCoachResponseDto();
+        fallbackResponse.setResponseType(ResponseType.ERP_REDIRECT);
+        fallbackResponse.setUserFacingMessage("I cannot verify or disprove the fear for you");
+        when(aiResponseValidator.buildFallback()).thenReturn(fallbackResponse);
         
         when(aiPolicyService.applyPolicy(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
