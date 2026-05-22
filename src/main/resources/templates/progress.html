@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SteadyMind Progress Analytics - Visualize your behavioral progress">
+    <title>Progress Dashboard — SteadyMind</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Navbar -->
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-4">
+
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h1 class="display-6 fw-bold text-primary">
+            <i class="bi bi-graph-up-arrow me-2"></i>Progress Dashboard
+        </h1>
+        <p class="text-muted">A visual overview of your tracked data. For self-reflection only.</p>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-2">Loading your analytics...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="d-none">
+        <div class="empty-state">
+            <i class="bi bi-bar-chart-line"></i>
+            <h4>No data yet</h4>
+            <p>Start logging urges, delay attempts, and exposure tasks to see progress analytics.</p>
+            <a th:href="@{/urge-logs/new}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle me-1"></i>Log a Moment
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard Content (hidden until loaded) -->
+    <div id="dashboardContent" class="d-none">
+
+        <!-- Summary Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card steadyai-card summary-card h-100">
+                    <div class="card-body text-center">
+                        <div class="summary-icon text-info mb-2">
+                            <i class="bi bi-journal-text fs-1"></i>
+                        </div>
+                        <h5 class="card-title text-muted">Urge Logs</h5>
+                        <p id="totalUrgeLogs" class="progress-stat-value">0</p>
+                        <small class="text-muted">Total entries logged</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card steadyai-card summary-card h-100">
+                    <div class="card-body text-center">
+                        <div class="summary-icon text-warning mb-2">
+                            <i class="bi bi-speedometer2 fs-1"></i>
+                        </div>
+                        <h5 class="card-title text-muted">Avg Intensity</h5>
+                        <p id="averageUrgeIntensity" class="progress-stat-value">0</p>
+                        <small class="text-muted">Average urge intensity</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card steadyai-card summary-card h-100">
+                    <div class="card-body text-center">
+                        <div class="summary-icon text-success mb-2">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                        <h5 class="card-title text-muted">Exposures Done</h5>
+                        <p id="completedExposureTasks" class="progress-stat-value">0</p>
+                        <small class="text-muted">Challenges completed</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card steadyai-card summary-card h-100">
+                    <div class="card-body text-center">
+                        <div class="summary-icon text-primary mb-2">
+                            <i class="bi bi-hourglass-split fs-1"></i>
+                        </div>
+                        <h5 class="card-title text-muted">Delays Completed</h5>
+                        <p id="completedDelayAttempts" class="progress-stat-value">0</p>
+                        <small class="text-muted">Successful delay attempts</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1: Trend + Triggers -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="chart-container h-100">
+                    <h5 class="progress-section-title">
+                        <i class="bi bi-graph-up me-2"></i>7-Day Urge Trend
+                    </h5>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-container h-100">
+                    <h5 class="progress-section-title">
+                        <i class="bi bi-pie-chart me-2"></i>Trigger Breakdown
+                    </h5>
+                    <div id="triggerChartWrapper">
+                        <canvas id="triggerChart"></canvas>
+                    </div>
+                    <div id="noTriggerData" class="d-none text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        No trigger data yet
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2: Intensity Distribution -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="chart-container h-100">
+                    <h5 class="progress-section-title">
+                        <i class="bi bi-bar-chart me-2"></i>Intensity Distribution
+                    </h5>
+                    <canvas id="intensityChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container h-100">
+                    <h5 class="progress-section-title">
+                        <i class="bi bi-card-checklist me-2"></i>Quick Stats
+                    </h5>
+                    <div class="row text-center py-3">
+                        <div class="col-6 mb-3">
+                            <div class="text-muted small">Highest Intensity</div>
+                            <div id="highestUrgeIntensity" class="fs-3 fw-bold text-danger">0</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-muted small">Total Exposure Tasks</div>
+                            <div id="totalExposureTasks" class="fs-3 fw-bold text-info">0</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-muted small">Pending Tasks</div>
+                            <div id="pendingExposureTasks" class="fs-3 fw-bold text-warning">0</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-muted small">Avg Delay (min)</div>
+                            <div id="averageDelayMinutes" class="fs-3 fw-bold text-success">0</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small">Total Delay Attempts</div>
+                            <div id="totalDelayAttempts" class="fs-3 fw-bold text-secondary">0</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small">Cancelled Delays</div>
+                            <div id="cancelledDelayAttempts" class="fs-3 fw-bold text-danger">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observations -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="progress-section-title">
+                        <i class="bi bi-lightbulb me-2"></i>Observations
+                    </h5>
+                    <ul id="observationsList" class="observation-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                    <div id="noObservations" class="d-none text-center text-muted py-3">
+                        <i class="bi bi-chat-square-text fs-3 d-block mb-2"></i>
+                        Observations will appear as you log more data.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Note -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div id="safetyNoteBox" class="safety-note">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span id="safetyNoteText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/progress/analytics')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingSpinner').classList.add('d-none');
+
+                const hasData = data.totalUrgeLogs > 0
+                    || data.totalExposureTasks > 0
+                    || data.totalDelayAttempts > 0;
+
+                if (!hasData) {
+                    document.getElementById('emptyState').classList.remove('d-none');
+                    return;
+                }
+
+                document.getElementById('dashboardContent').classList.remove('d-none');
+                renderSummaryCards(data);
+                renderTrendChart(data.sevenDayUrgeTrend);
+                renderTriggerChart(data.triggerBreakdown);
+                renderIntensityChart(data.intensityDistribution);
+                renderObservations(data.progressObservations);
+                renderSafetyNote(data.safetyNote);
+                renderQuickStats(data);
+            })
+            .catch(error => {
+                console.error('Failed to load analytics:', error);
+                document.getElementById('loadingSpinner').classList.add('d-none');
+                document.getElementById('emptyState').classList.remove('d-none');
+            });
+    });
+
+    function renderSummaryCards(data) {
+        document.getElementById('totalUrgeLogs').textContent = data.totalUrgeLogs;
+        document.getElementById('averageUrgeIntensity').textContent = data.averageUrgeIntensity;
+        document.getElementById('completedExposureTasks').textContent = data.completedExposureTasks;
+        document.getElementById('completedDelayAttempts').textContent = data.completedDelayAttempts;
+    }
+
+    function renderQuickStats(data) {
+        document.getElementById('highestUrgeIntensity').textContent = data.highestUrgeIntensity;
+        document.getElementById('totalExposureTasks').textContent = data.totalExposureTasks;
+        document.getElementById('pendingExposureTasks').textContent = data.pendingExposureTasks;
+        document.getElementById('averageDelayMinutes').textContent = data.averageDelayMinutes;
+        document.getElementById('totalDelayAttempts').textContent = data.totalDelayAttempts;
+        document.getElementById('cancelledDelayAttempts').textContent = data.cancelledDelayAttempts;
+    }
+
+    function renderTrendChart(trend) {
+        const labels = trend.map(t => t.date.substring(5)); // MM-DD
+        const counts = trend.map(t => t.count);
+        const intensities = trend.map(t => t.averageIntensity);
+
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Urge Count',
+                        data: counts,
+                        borderColor: '#5c6bc0',
+                        backgroundColor: 'rgba(92, 107, 192, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Avg Intensity',
+                        data: intensities,
+                        borderColor: '#ef5350',
+                        backgroundColor: 'rgba(239, 83, 80, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        borderDash: [5, 5],
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Count' },
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Intensity' },
+                        beginAtZero: true,
+                        max: 10,
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTriggerChart(breakdown) {
+        if (!breakdown || breakdown.length === 0) {
+            document.getElementById('triggerChartWrapper').classList.add('d-none');
+            document.getElementById('noTriggerData').classList.remove('d-none');
+            return;
+        }
+
+        const labels = breakdown.map(b => b.trigger);
+        const counts = breakdown.map(b => b.count);
+        const colors = [
+            '#5c6bc0', '#42a5f5', '#26c6da', '#66bb6a', '#ffca28',
+            '#ff7043', '#ab47bc', '#ec407a', '#78909c', '#8d6e63'
+        ];
+
+        const ctx = document.getElementById('triggerChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 10, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderIntensityChart(distribution) {
+        const labels = distribution.map(d => d.range);
+        const counts = distribution.map(d => d.count);
+        const colors = ['#66bb6a', '#ffca28', '#ef5350'];
+
+        const ctx = document.getElementById('intensityChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Count',
+                    data: counts,
+                    backgroundColor: colors,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderObservations(observations) {
+        const list = document.getElementById('observationsList');
+        const noObs = document.getElementById('noObservations');
+
+        if (!observations || observations.length === 0) {
+            list.classList.add('d-none');
+            noObs.classList.remove('d-none');
+            return;
+        }
+
+        observations.forEach(obs => {
+            const li = document.createElement('li');
+            li.textContent = obs;
+            list.appendChild(li);
+        });
+    }
+
+    function renderSafetyNote(note) {
+        document.getElementById('safetyNoteText').textContent = note;
+    }
+</script>
+</body>
+</html>
