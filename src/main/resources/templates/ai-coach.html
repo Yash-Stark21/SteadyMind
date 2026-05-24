@@ -25,18 +25,15 @@
             <!-- Message Input Card -->
             <div class="card steadyai-card mb-4">
                 <div class="card-body p-4">
-                    <form th:action="@{/ai-coach}" method="post" th:object="${aiCoachRequest}">
+                    <form id="aiCoachForm">
                         <div class="mb-3">
                             <label for="coachMessage" class="form-label fw-semibold">
                                 <i class="bi bi-chat-dots me-1"></i>Share what's on your mind
                             </label>
                             <textarea class="form-control" id="coachMessage" rows="4"
-                                      th:field="*{message}"
                                       placeholder="Describe what you're experiencing, thinking, or feeling..."
-                                      maxlength="1000"></textarea>
-                            <div th:if="${#fields.hasErrors('message')}" class="text-danger small mt-1">
-                                <span th:errors="*{message}"></span>
-                            </div>
+                                      maxlength="1000" required></textarea>
+                            <div id="formError" class="text-danger small mt-1" style="display: none;"></div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100" id="askCoachBtn">
                             <i class="bi bi-send me-2"></i>Ask Coach
@@ -45,7 +42,10 @@
                 </div>
             </div>
 
+            <div id="responseContainer"></div>
+
             <!-- AI Coach Response (shown after POST) -->
+            <!-- AI Coach Response (shown after POST from thymeleaf left as fallback, but JS will prepend to responseContainer) -->
             <div th:if="${coachResponse}" class="card steadyai-card mb-4" id="coachResponseCard">
                 <div class="card-header bg-primary text-white fw-semibold">
                     <i class="bi bi-robot me-2"></i>Coach Response
@@ -68,7 +68,7 @@
                             <span th:text="${coachResponse.intent}"></span>
                         </span>
                         <span class="badge"
-                              th:classappend="${coachResponse.riskLevel.name() == 'HIGH'} ? 'bg-danger' : (${coachResponse.riskLevel.name() == 'MEDIUM'} ? 'bg-warning text-dark' : 'bg-success')">
+                              th:classappend="${coachResponse.riskLevel != null and coachResponse.riskLevel.name() == 'HIGH'} ? 'bg-danger' : (${coachResponse.riskLevel != null and coachResponse.riskLevel.name() == 'MEDIUM'} ? 'bg-warning text-dark' : 'bg-success')">
                             <i class="bi bi-shield-check me-1"></i>Risk:
                             <span th:text="${coachResponse.riskLevel}"></span>
                         </span>
@@ -79,7 +79,8 @@
                     </div>
                 </div>
             </div>
-
+            
+            <div id="historyContainer">
             <!-- Recent Message History -->
             <div th:if="${recentMessages != null and !recentMessages.isEmpty()}" class="card steadyai-card mb-4">
                 <div class="card-header bg-light fw-semibold">
@@ -111,6 +112,7 @@
                     </div>
                 </div>
             </div>
+            </div>
 
             <!-- Footer Info -->
             <div class="card steadyai-card mb-4">
@@ -130,5 +132,94 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('aiCoachForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const messageInput = document.getElementById('coachMessage');
+        const message = messageInput.value.trim();
+        const btn = document.getElementById('askCoachBtn');
+        const errorDiv = document.getElementById('formError');
+        
+        if (!message) return;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Thinking...';
+        errorDiv.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/ai/coach', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(err || 'Failed to get response');
+            }
+            
+            const data = await res.json();
+            
+            // Build the card HTML dynamically
+            let riskClass = 'bg-success';
+            if (data.riskLevel === 'HIGH') riskClass = 'bg-danger';
+            else if (data.riskLevel === 'MEDIUM') riskClass = 'bg-warning text-dark';
+            
+            const newCard = document.createElement('div');
+            newCard.className = 'card steadyai-card mb-4 slide-in';
+            newCard.innerHTML = `
+                <div class="card-header bg-primary text-white fw-semibold">
+                    <i class="bi bi-robot me-2"></i>Coach Response
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted fw-semibold">Your message:</small>
+                        <p class="mb-0 fst-italic">${escapeHtml(data.userMessage)}</p>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <p class="fw-semibold mb-1">${escapeHtml(data.aiResponse)}</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <span class="badge bg-info text-dark">
+                            <i class="bi bi-bullseye me-1"></i>Intent:
+                            <span>${escapeHtml(data.intent)}</span>
+                        </span>
+                        <span class="badge ${riskClass}">
+                            <i class="bi bi-shield-check me-1"></i>Risk:
+                            <span>${escapeHtml(data.riskLevel)}</span>
+                        </span>
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-diagram-3 me-1"></i>Type:
+                            <span>${escapeHtml(data.responseType)}</span>
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            // Hide the old thymeleaf card if it exists
+            const oldCard = document.getElementById('coachResponseCard');
+            if (oldCard) oldCard.style.display = 'none';
+            
+            document.getElementById('responseContainer').prepend(newCard);
+            messageInput.value = '';
+            
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-2"></i>Ask Coach';
+        }
+    });
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
 </body>
 </html>

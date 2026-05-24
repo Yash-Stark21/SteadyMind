@@ -67,16 +67,16 @@
             </div>
         </div>
 
-        <!-- AI Coach Status -->
+        <!-- Delay Attempts -->
         <div class="col-md-6 col-lg-3">
             <div class="card steadyai-card summary-card h-100">
                 <div class="card-body text-center">
-                    <div class="summary-icon text-secondary mb-2">
-                        <i class="bi bi-robot fs-1"></i>
+                    <div class="summary-icon text-danger mb-2">
+                        <i class="bi bi-stopwatch fs-1"></i>
                     </div>
-                    <h5 class="card-title text-muted">AI Coach</h5>
-                    <p class="fs-5 fw-bold text-secondary">Coming Soon</p>
-                    <small class="text-muted">Secure pipeline in progress</small>
+                    <h5 class="card-title text-muted">Delay Attempts</h5>
+                    <p class="display-5 fw-bold" id="totalDelayAttempts"><span class="spinner-border spinner-border-sm"></span></p>
+                    <small class="text-muted">Compulsion delays practiced</small>
                 </div>
             </div>
         </div>
@@ -102,8 +102,8 @@
             </a>
         </div>
         <div class="col-md-3">
-            <a th:href="@{/weekly-summary}" class="btn btn-outline-info btn-lg w-100 quick-action-btn">
-                <i class="bi bi-calendar-check me-2"></i>Summary
+            <a th:href="@{/delay-attempts}" class="btn btn-outline-danger btn-lg w-100 quick-action-btn">
+                <i class="bi bi-stopwatch me-2"></i>Delay Timer
             </a>
         </div>
     </div>
@@ -111,5 +111,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/compulsion-delay-attempts')
+            .then(response => response.ok ? response.json() : [])
+            .then(data => {
+                document.getElementById('totalDelayAttempts').textContent = data.length;
+            })
+            .catch(() => {
+                document.getElementById('totalDelayAttempts').textContent = '0';
+            });
+    });
+</script>
 </body>
 </html>

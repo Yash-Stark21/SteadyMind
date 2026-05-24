@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Practice delaying compulsions with a guided timer - SteadyMind">
+    <title>Delay Timer — SteadyMind</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold"><i class="bi bi-stopwatch me-2 text-danger"></i>Delay Timer</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal" id="startTimerBtn">
+            <i class="bi bi-play-circle me-1"></i> Start Delay Timer
+        </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted mt-3">Loading your delay attempts...</p>
+    </div>
+
+    <!-- Empty State (hidden by default) -->
+    <div id="emptyState" class="text-center py-5" style="display: none;">
+        <i class="bi bi-stopwatch display-1 text-muted" style="opacity: 0.4;"></i>
+        <p class="text-muted mt-3 fs-5">No delay attempts yet.</p>
+        <p class="text-muted">When you feel an urge, start a delay timer to practice sitting with discomfort.<br>
+            Every minute you delay is a victory.</p>
+        <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="bi bi-play-circle me-1"></i> Start Your First Delay
+        </button>
+    </div>
+
+    <!-- Active Attempts Section -->
+    <div id="activeSection" style="display: none;">
+        <h2 class="h5 fw-bold mb-3"><i class="bi bi-activity me-2 text-primary"></i>Active Timers</h2>
+        <div id="activeAttempts" class="row g-3 mb-3"></div>
+        <hr class="section-divider">
+    </div>
+
+    <!-- Completed Attempts Section -->
+    <div id="completedSection" style="display: none;">
+        <h2 class="h5 fw-bold mb-3"><i class="bi bi-clock-history me-2 text-muted"></i>Past Attempts</h2>
+        <div id="completedAttempts" class="row g-3"></div>
+    </div>
+
+    <!-- Error Alert (hidden) -->
+    <div id="errorAlert" class="alert alert-danger alert-dismissible fade show" style="display: none;" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span id="errorMessage"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+
+<!-- ==================== Create Attempt Modal ==================== -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="createModalLabel">
+                    <i class="bi bi-stopwatch me-2 text-primary"></i>Start Delay Timer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted small mb-3">Set a timer and practice sitting with the urge. You've got this.</p>
+                <form id="createForm" novalidate>
+                    <div class="mb-3">
+                        <label for="triggerDescription" class="form-label fw-semibold">What's triggering you right now?</label>
+                        <textarea class="form-control" id="triggerDescription" rows="2" maxlength="500"
+                                  placeholder="Describe the urge or trigger..." required></textarea>
+                        <div class="invalid-feedback">Please describe what you're feeling.</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="plannedDelayMinutes" class="form-label fw-semibold">Delay for</label>
+                            <select class="form-select" id="plannedDelayMinutes" required>
+                                <option value="2">2 minutes</option>
+                                <option value="5" selected>5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="20">20 minutes</option>
+                                <option value="30">30 minutes</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="copingStrategyUsed" class="form-label fw-semibold">Coping strategy</label>
+                            <select class="form-select" id="copingStrategyUsed">
+                                <option value="">Choose...</option>
+                                <option value="BREATHING">Deep Breathing</option>
+                                <option value="WALKING">Go for a Walk</option>
+                                <option value="JOURNALING">Journaling</option>
+                                <option value="COLD_WATER">Cold Water / Ice</option>
+                                <option value="CALL_SUPPORT">Call Support Person</option>
+                                <option value="DISTRACTION">Healthy Distraction</option>
+                                <option value="DELAY_TIMER">Delay Timer Focus</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label fw-semibold">Notes <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea class="form-control" id="notes" rows="2" maxlength="1000"
+                                  placeholder="Any thoughts, plans, or reminders..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="createSubmitBtn" onclick="createAttempt()">
+                    <i class="bi bi-play-fill me-1"></i> Start Timer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Complete Attempt Modal ==================== -->
+<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="completeModalLabel">
+                    <i class="bi bi-check-circle me-2 text-success"></i>Record Your Outcome
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted small mb-3">No matter the outcome, you showed up. That takes courage.</p>
+                <input type="hidden" id="completeAttemptId">
+                <form id="completeForm" novalidate>
+                    <div class="mb-3">
+                        <label for="actualDelayMinutes" class="form-label fw-semibold">How long did you actually delay? (minutes)</label>
+                        <input type="number" class="form-control" id="actualDelayMinutes" min="0" max="999"
+                               placeholder="e.g. 5" required>
+                        <div class="invalid-feedback">Please enter the actual delay time.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="outcome" class="form-label fw-semibold">How did it go?</label>
+                        <select class="form-select" id="outcome" required>
+                            <option value="">Choose outcome...</option>
+                            <option value="SUCCESS">✅ Fully Resisted — I made it!</option>
+                            <option value="PARTIAL_SUCCESS">🟡 Partially Resisted — delayed but gave in</option>
+                            <option value="FAILED">❌ Gave In — couldn't resist</option>
+                        </select>
+                        <div class="invalid-feedback">Please select an outcome.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="completeSubmitBtn" onclick="completeAttempt()">
+                    <i class="bi bi-check-lg me-1"></i> Record Outcome
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Attempt Modal -->
+<div class="modal fade" id="viewAttemptModal" tabindex="-1" aria-labelledby="viewAttemptModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="viewAttemptModalLabel"><i class="bi bi-stopwatch me-2 text-primary"></i>Delay Attempt Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-1">Trigger</label>
+                    <p id="viewTriggerDesc" class="mb-0 text-muted">—</p>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold mb-1">Planned Delay</label>
+                        <p id="viewPlannedDelay" class="mb-0 text-muted">—</p>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold mb-1">Actual Delay</label>
+                        <p id="viewActualDelay" class="mb-0 text-muted">—</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold mb-1">Coping Strategy</label>
+                        <p id="viewCoping" class="mb-0 text-muted">—</p>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold mb-1">Outcome</label>
+                        <p id="viewOutcome" class="mb-0">—</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-1">Notes</label>
+                    <p id="viewNotes" class="mb-0 text-muted">—</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Attempt Modal -->
+<div class="modal fade" id="editAttemptModal" tabindex="-1" aria-labelledby="editAttemptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="editAttemptModalLabel">
+                    <i class="bi bi-pencil me-2 text-primary"></i>Edit Delay Timer
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <form id="editAttemptForm" novalidate>
+                    <input type="hidden" id="editAttemptId">
+                    <div class="mb-3">
+                        <label for="editTriggerDescription" class="form-label fw-semibold">Trigger</label>
+                        <textarea class="form-control" id="editTriggerDescription" rows="2" maxlength="500" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label for="editPlannedDelayMinutes" class="form-label fw-semibold">Delay for</label>
+                            <select class="form-select" id="editPlannedDelayMinutes" required>
+                                <option value="2">2 minutes</option>
+                                <option value="5">5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="20">20 minutes</option>
+                                <option value="30">30 minutes</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label for="editCopingStrategyUsed" class="form-label fw-semibold">Coping strategy</label>
+                            <select class="form-select" id="editCopingStrategyUsed">
+                                <option value="">Choose...</option>
+                                <option value="BREATHING">Deep Breathing</option>
+                                <option value="WALKING">Go for a Walk</option>
+                                <option value="JOURNALING">Journaling</option>
+                                <option value="COLD_WATER">Cold Water / Ice</option>
+                                <option value="CALL_SUPPORT">Call Support Person</option>
+                                <option value="DISTRACTION">Healthy Distraction</option>
+                                <option value="DELAY_TIMER">Delay Timer Focus</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNotes" class="form-label fw-semibold">Notes</label>
+                        <textarea class="form-control" id="editNotes" rows="2" maxlength="1000"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateAttemptBtn" onclick="updateAttempt()">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ========================================
+    // State
+    // ========================================
+    const timerIntervals = new Map(); // attemptId -> intervalId
+
+    // ========================================
+    // Formatting helpers
+    // ========================================
+    function formatCopingStrategy(value) {
+        const map = {
+            'BREATHING': 'Deep Breathing',
+            'WALKING': 'Go for a Walk',
+            'JOURNALING': 'Journaling',
+            'COLD_WATER': 'Cold Water / Ice',
+            'CALL_SUPPORT': 'Call Support Person',
+            'DISTRACTION': 'Healthy Distraction',
+            'DELAY_TIMER': 'Delay Timer Focus',
+            'OTHER': 'Other'
+        };
+        return map[value] || value || '—';
+    }
+
+    function formatOutcomeBadge(outcome) {
+        const map = {
+            'SUCCESS': '<span class="badge outcome-success">✓ Resisted</span>',
+            'PARTIAL_SUCCESS': '<span class="badge outcome-partial">~ Partial</span>',
+            'FAILED': '<span class="badge outcome-failed">✕ Gave In</span>',
+            'CANCELLED': '<span class="badge outcome-cancelled">Cancelled</span>'
+        };
+        return map[outcome] || '<span class="badge bg-info">Active</span>';
+    }
+
+    function formatDateTime(isoString) {
+        if (!isoString) return '—';
+        const d = new Date(isoString);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ========================================
+    // Data loading
+    // ========================================
+    async function loadAttempts() {
+        try {
+            const response = await fetch('/api/compulsion-delay-attempts');
+            if (!response.ok) throw new Error('Failed to load attempts');
+            const attempts = await response.json();
+
+            // Clear existing timer intervals
+            timerIntervals.forEach(id => clearInterval(id));
+            timerIntervals.clear();
+
+            // Split into active (no outcome) and completed
+            const active = attempts.filter(a => a.outcome === null);
+            const completed = attempts.filter(a => a.outcome !== null)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            document.getElementById('loadingState').style.display = 'none';
+
+            if (attempts.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('activeSection').style.display = 'none';
+                document.getElementById('completedSection').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+
+            if (active.length > 0) {
+                document.getElementById('activeSection').style.display = 'block';
+                renderActiveAttempts(active);
+            } else {
+                document.getElementById('activeSection').style.display = 'none';
+            }
+
+            if (completed.length > 0) {
+                document.getElementById('completedSection').style.display = 'block';
+                renderCompletedAttempts(completed);
+            } else {
+                document.getElementById('completedSection').style.display = 'none';
+            }
+        } catch (error) {
+            document.getElementById('loadingState').style.display = 'none';
+            showError('Could not load delay attempts: ' + error.message);
+        }
+    }
+
+    // ========================================
+    // Render active attempts with countdown
+    // ========================================
+    function renderActiveAttempts(attempts) {
+        const container = document.getElementById('activeAttempts');
+        container.innerHTML = '';
+
+        attempts.forEach(attempt => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            col.innerHTML = `
+                <div class="card delay-card delay-card-active h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-2 d-flex justify-content-between align-items-start">
+                            <span class="coping-badge">
+                                <i class="bi bi-heart-pulse me-1"></i>${escapeHtml(formatCopingStrategy(attempt.copingStrategyUsed))}
+                            </span>
+                            <button class="btn btn-outline-primary btn-sm py-0 px-2" onclick="editDelayAttempt(${attempt.id})" title="Edit" style="font-size: 0.75rem;">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </div>
+                        <p class="fw-semibold mb-1">${escapeHtml(attempt.triggerDescription) || 'Delay attempt'}</p>
+                        <small class="text-muted d-block mb-3">Planned: ${attempt.plannedDelayMinutes} min</small>
+
+                        <!-- Countdown Timer Ring -->
+                        <div class="timer-container">
+                            <div class="timer-ring" id="timer-ring-${attempt.id}">
+                                <svg width="120" height="120" viewBox="0 0 120 120">
+                                    <circle class="ring-bg" cx="60" cy="60" r="52" stroke-width="8" fill="none"/>
+                                    <circle class="ring-progress" id="ring-${attempt.id}" cx="60" cy="60" r="52"
+                                            stroke-width="8" fill="none"
+                                            stroke-dasharray="326.73" stroke-dashoffset="0"/>
+                                </svg>
+                                <div class="timer-text" id="timer-text-${attempt.id}">--:--</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="delay-actions d-flex gap-2 justify-content-center mt-3">
+                            <button class="btn btn-success btn-sm" onclick="openCompleteModal(${attempt.id})">
+                                <i class="bi bi-check-lg me-1"></i> I Made It
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="cancelAttempt(${attempt.id})">
+                                <i class="bi bi-x-lg me-1"></i> Give Up
+                            </button>
+                        </div>
+                        <div class="attempt-meta mt-3">
+                            <i class="bi bi-clock"></i> Started ${formatDateTime(attempt.startedAt || attempt.createdAt)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+
+            // Start the countdown timer
+            startCountdown(attempt.id, attempt.startedAt || attempt.createdAt, attempt.plannedDelayMinutes);
+        });
+    }
+
+    // ========================================
+    // Render completed attempts
+    // ========================================
+    function renderCompletedAttempts(attempts) {
+        const container = document.getElementById('completedAttempts');
+        container.innerHTML = '';
+
+        attempts.forEach(attempt => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            col.innerHTML = `
+                <div class="card delay-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="coping-badge">
+                                <i class="bi bi-heart-pulse me-1"></i>${escapeHtml(formatCopingStrategy(attempt.copingStrategyUsed))}
+                            </span>
+                            ${formatOutcomeBadge(attempt.outcome)}
+                        </div>
+                        <p class="fw-semibold mb-2">${escapeHtml(attempt.triggerDescription) || 'Delay attempt'}</p>
+                        <div class="row text-center mb-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Planned</small>
+                                <span class="fw-bold">${attempt.plannedDelayMinutes} min</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Actual</small>
+                                <span class="fw-bold">${attempt.actualDelayMinutes != null ? attempt.actualDelayMinutes + ' min' : '—'}</span>
+                            </div>
+                        </div>
+                        ${attempt.notes ? '<p class="small text-muted mb-2"><i class="bi bi-chat-text me-1"></i>' + escapeHtml(attempt.notes) + '</p>' : ''}
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="attempt-meta">
+                                <i class="bi bi-calendar3 me-1"></i>${formatDateTime(attempt.createdAt)}
+                            </small>
+                            <div>
+                                <button class="btn btn-outline-info btn-sm py-0 px-2 me-1" onclick="viewDelayAttempt(${attempt.id})" title="View Details" style="font-size: 0.75rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" onclick="editDelayAttempt(${attempt.id})" title="Edit" style="font-size: 0.75rem;">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteAttempt(${attempt.id})"
+                                        title="Delete this attempt" style="font-size: 0.75rem;">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+        });
+    }
+
+    // ========================================
+    // Countdown Timer Logic
+    // ========================================
+    function startCountdown(attemptId, startedAt, plannedMinutes) {
+        const circumference = 2 * Math.PI * 52; // 326.73
+        const totalSeconds = plannedMinutes * 60;
+        const startTime = new Date(startedAt).getTime();
+
+        function update() {
+            const now = Date.now();
+            const elapsed = Math.floor((now - startTime) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            const fraction = remaining / totalSeconds;
+
+            // Update ring
+            const ring = document.getElementById('ring-' + attemptId);
+            const textEl = document.getElementById('timer-text-' + attemptId);
+            if (!ring || !textEl) { clearInterval(timerIntervals.get(attemptId)); return; }
+
+            const offset = circumference * (1 - fraction);
+            ring.setAttribute('stroke-dashoffset', offset);
+
+            // Color changes based on remaining time
+            ring.classList.remove('timer-warning', 'timer-danger');
+            if (fraction <= 0.15) {
+                ring.classList.add('timer-danger');
+            } else if (fraction <= 0.35) {
+                ring.classList.add('timer-warning');
+            }
+
+            if (remaining <= 0) {
+                textEl.textContent = "Time's Up! 🎉";
+                textEl.classList.add('timer-done');
+                ring.setAttribute('stroke-dashoffset', circumference);
+                clearInterval(timerIntervals.get(attemptId));
+                timerIntervals.delete(attemptId);
+            } else {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                textEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            }
+        }
+
+        update(); // Initial call
+        const intervalId = setInterval(update, 1000);
+        timerIntervals.set(attemptId, intervalId);
+    }
+
+    // ========================================
+    // CRUD Operations
+    // ========================================
+    async function createAttempt() {
+        const form = document.getElementById('createForm');
+        const triggerInput = document.getElementById('triggerDescription');
+
+        // Validate
+        if (!triggerInput.value.trim()) {
+            triggerInput.classList.add('is-invalid');
+            return;
+        }
+        triggerInput.classList.remove('is-invalid');
+
+        const btn = document.getElementById('createSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Starting...';
+
+        const body = {
+            triggerDescription: triggerInput.value.trim(),
+            plannedDelayMinutes: parseInt(document.getElementById('plannedDelayMinutes').value),
+            copingStrategyUsed: document.getElementById('copingStrategyUsed').value || null,
+            notes: document.getElementById('notes').value.trim() || null
+        };
+
+        try {
+            const response = await fetch('/api/compulsion-delay-attempts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err || 'Failed to create attempt');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+            form.reset();
+            document.getElementById('plannedDelayMinutes').value = '5'; // Reset default
+            await loadAttempts();
+        } catch (error) {
+            showError('Could not start timer: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-play-fill me-1"></i> Start Timer';
+        }
+    }
+
+    function openCompleteModal(attemptId) {
+        document.getElementById('completeAttemptId').value = attemptId;
+        document.getElementById('completeForm').reset();
+        new bootstrap.Modal(document.getElementById('completeModal')).show();
+    }
+
+    async function completeAttempt() {
+        const attemptId = document.getElementById('completeAttemptId').value;
+        const actualMinutes = document.getElementById('actualDelayMinutes');
+        const outcomeSelect = document.getElementById('outcome');
+
+        // Validate
+        let valid = true;
+        if (!actualMinutes.value || actualMinutes.value < 0) {
+            actualMinutes.classList.add('is-invalid');
+            valid = false;
+        } else {
+            actualMinutes.classList.remove('is-invalid');
+        }
+        if (!outcomeSelect.value) {
+            outcomeSelect.classList.add('is-invalid');
+            valid = false;
+        } else {
+            outcomeSelect.classList.remove('is-invalid');
+        }
+        if (!valid) return;
+
+        const btn = document.getElementById('completeSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+        try {
+            const response = await fetch('/api/compulsion-delay-attempts/' + attemptId + '/complete', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    actualDelayMinutes: parseInt(actualMinutes.value),
+                    outcome: outcomeSelect.value
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err || 'Failed to complete attempt');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('completeModal')).hide();
+            await loadAttempts();
+        } catch (error) {
+            showError('Could not record outcome: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Record Outcome';
+        }
+    }
+
+    async function cancelAttempt(id) {
+        if (!confirm('Are you sure you want to give up on this delay? Every second you waited still counts.')) return;
+
+        try {
+            const response = await fetch('/api/compulsion-delay-attempts/' + id + '/cancel', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!response.ok) throw new Error('Failed to cancel attempt');
+            await loadAttempts();
+        } catch (error) {
+            showError('Could not cancel attempt: ' + error.message);
+        }
+    }
+
+    async function deleteAttempt(id) {
+        if (!confirm('Delete this delay attempt? This action cannot be undone.')) return;
+
+        try {
+            const response = await fetch('/api/compulsion-delay-attempts/' + id, {
+                method: 'DELETE'
+            });
+            if (!response.ok) throw new Error('Failed to delete attempt');
+            await loadAttempts();
+        } catch (error) {
+            showError('Could not delete attempt: ' + error.message);
+        }
+    }
+
+    async function viewDelayAttempt(id) {
+        try {
+            const res = await fetch('/api/compulsion-delay-attempts/' + id);
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            document.getElementById('viewTriggerDesc').textContent = data.triggerDescription || '—';
+            document.getElementById('viewPlannedDelay').textContent = data.plannedDelayMinutes + ' min';
+            document.getElementById('viewActualDelay').textContent = data.actualDelayMinutes != null ? data.actualDelayMinutes + ' min' : '—';
+            document.getElementById('viewCoping').textContent = formatCopingStrategy(data.copingStrategyUsed);
+            document.getElementById('viewOutcome').innerHTML = formatOutcomeBadge(data.outcome);
+            document.getElementById('viewNotes').textContent = data.notes || '—';
+            new bootstrap.Modal(document.getElementById('viewAttemptModal')).show();
+        } catch (error) {
+            showError('Could not load attempt details: ' + error.message);
+        }
+    }
+
+    async function editDelayAttempt(id) {
+        try {
+            const res = await fetch('/api/compulsion-delay-attempts/' + id);
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            document.getElementById('editAttemptId').value = data.id;
+            document.getElementById('editTriggerDescription').value = data.triggerDescription || '';
+            
+            // if planned delay is not in options, we might need to add it dynamically, but for now we assume it matches
+            let plannedSel = document.getElementById('editPlannedDelayMinutes');
+            if (Array.from(plannedSel.options).some(o => o.value == data.plannedDelayMinutes)) {
+                plannedSel.value = data.plannedDelayMinutes;
+            }
+            document.getElementById('editCopingStrategyUsed').value = data.copingStrategyUsed || '';
+            document.getElementById('editNotes').value = data.notes || '';
+            
+            new bootstrap.Modal(document.getElementById('editAttemptModal')).show();
+        } catch (error) {
+            showError('Could not load attempt for editing: ' + error.message);
+        }
+    }
+
+    async function updateAttempt() {
+        const btn = document.getElementById('updateAttemptBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+        const id = document.getElementById('editAttemptId').value;
+        const payload = {
+            triggerDescription: document.getElementById('editTriggerDescription').value,
+            plannedDelayMinutes: parseInt(document.getElementById('editPlannedDelayMinutes').value),
+            copingStrategyUsed: document.getElementById('editCopingStrategyUsed').value || null,
+            notes: document.getElementById('editNotes').value || null
+        };
+
+        try {
+            const res = await fetch('/api/compulsion-delay-attempts/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('Failed to update attempt');
+            
+            bootstrap.Modal.getInstance(document.getElementById('editAttemptModal')).hide();
+            await loadAttempts();
+        } catch (error) {
+            showError('Could not update attempt: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Save Changes';
+        }
+    }
+
+    // ========================================
+    // Error display
+    // ========================================
+    function showError(message) {
+        const alertEl = document.getElementById('errorAlert');
+        document.getElementById('errorMessage').textContent = message;
+        alertEl.style.display = 'block';
+        setTimeout(() => { alertEl.style.display = 'none'; }, 8000);
+    }
+
+    // ========================================
+    // Initialize
+    // ========================================
+    document.addEventListener('DOMContentLoaded', loadAttempts);
+</script>
+</body>
+</html>

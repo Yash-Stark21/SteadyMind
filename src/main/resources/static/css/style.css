@@ -170,3 +170,161 @@ body {
     color: #1a237e;
 }
 
+/* ============================================
+   Exposure Task Action Buttons
+   ============================================ */
+.task-actions .btn {
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+.task-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Delay Timer — Active Card
+   ============================================ */
+.delay-card-active {
+    border: 2px solid #1a237e;
+    background: linear-gradient(135deg, #f8f9ff 0%, #eef0ff 100%);
+    animation: activeGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes activeGlow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(26, 35, 126, 0.12); }
+    50% { box-shadow: 0 8px 32px rgba(26, 35, 126, 0.25); }
+}
+
+/* ============================================
+   Countdown Timer Ring
+   ============================================ */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0;
+}
+
+.timer-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.timer-ring svg {
+    transform: rotate(-90deg);
+}
+
+.timer-ring .ring-bg {
+    stroke: #e8eaf6;
+}
+
+.timer-ring .ring-progress {
+    stroke: #1a237e;
+    transition: stroke-dashoffset 1s linear;
+    stroke-linecap: round;
+}
+
+.timer-ring .ring-progress.timer-warning {
+    stroke: #ff9800;
+}
+
+.timer-ring .ring-progress.timer-danger {
+    stroke: #f44336;
+    animation: pulseRing 1s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a237e;
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-text.timer-done {
+    font-size: 1rem;
+    color: #2e7d32;
+    animation: celebratePulse 0.6s ease-in-out;
+}
+
+@keyframes celebratePulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    60% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* ============================================
+   Outcome Badges
+   ============================================ */
+.outcome-success { background-color: #2e7d32 !important; }
+.outcome-partial { background-color: #f57f17 !important; color: #fff !important; }
+.outcome-failed { background-color: #c62828 !important; }
+.outcome-cancelled { background-color: #757575 !important; }
+
+/* ============================================
+   Delay Attempt Cards
+   ============================================ */
+.delay-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.delay-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.coping-badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    background-color: #e8eaf6;
+    color: #1a237e;
+    border-radius: 6px;
+}
+
+/* ============================================
+   Delay Timer Page Sections
+   ============================================ */
+.section-divider {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #c5cae9, transparent);
+    margin: 2rem 0;
+}
+
+.delay-actions .btn {
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.delay-actions .btn:hover {
+    transform: translateY(-1px);
+}
+
+.attempt-meta {
+    font-size: 0.85rem;
+    color: #78909c;
+}
+
+.attempt-meta i {
+    width: 1rem;
+    text-align: center;
+}
+
