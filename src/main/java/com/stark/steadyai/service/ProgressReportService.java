@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 public class ProgressReportService {
 
-    private static final String SAFETY_NOTE = "This report is for personal reflection only and is not medical advice or a diagnosis.";
+    private static final String SAFETY_NOTE = "This is for self-reflection only and is not medical advice or a diagnosis.";
     
     private final ProgressAnalyticsService progressAnalyticsService;
     private final WeeklySummaryService weeklySummaryService;

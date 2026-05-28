@@ -3,6 +3,8 @@ package com.stark.steadyai.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import com.stark.steadyai.enums.Role;
+
 @Entity
 @Table(name = "app_users")
 public class User {
@@ -19,6 +21,10 @@ public class User {
 
     @Column(nullable = false)
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.ROLE_USER;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -71,5 +77,13 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

@@ -4,6 +4,7 @@ import com.stark.steadyai.dto.ProgressReportResponse;
 import com.stark.steadyai.entity.User;
 import com.stark.steadyai.repository.UserRepository;
 import com.stark.steadyai.service.ProgressReportService;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -51,18 +52,8 @@ public class ProgressReportController {
     }
 
     private User getUser(Authentication authentication) {
-        if (authentication != null && authentication.getName() != null) {
-            return userRepository.findByEmail(authentication.getName())
-                    .orElseGet(this::getDemoUser);
-        }
-        return getDemoUser();
+        return SecurityUtils.getCurrentUser();
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 }

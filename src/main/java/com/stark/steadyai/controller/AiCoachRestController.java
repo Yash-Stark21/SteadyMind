@@ -6,6 +6,7 @@ import com.stark.steadyai.entity.User;
 import com.stark.steadyai.repository.UserRepository;
 import com.stark.steadyai.service.AiCoachService;
 import jakarta.validation.Valid;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,18 +54,8 @@ public class AiCoachRestController {
     // =========================================================================
 
     private User getUser(Authentication authentication) {
-        if (authentication != null && authentication.getName() != null) {
-            return userRepository.findByEmail(authentication.getName())
-                    .orElseGet(this::getDemoUser);
-        }
-        return getDemoUser();
+        return SecurityUtils.getCurrentUser();
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 }

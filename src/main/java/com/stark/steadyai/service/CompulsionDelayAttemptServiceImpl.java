@@ -15,6 +15,7 @@ import com.stark.steadyai.repository.CompulsionDelayAttemptRepository;
 import com.stark.steadyai.repository.ExposureTaskRepository;
 import com.stark.steadyai.repository.UrgeLogRepository;
 import com.stark.steadyai.repository.UserRepository;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,17 +42,10 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
         this.userRepository = userRepository;
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
 
     @Override
     public CompulsionDelayAttemptResponse createDelayAttempt(CompulsionDelayAttemptRequest request) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
 
         CompulsionDelayAttempt attempt = new CompulsionDelayAttempt();
         attempt.setUser(user);
@@ -79,7 +73,7 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
 
     @Override
     public List<CompulsionDelayAttemptResponse> getAllDelayAttemptsForCurrentUser() {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         List<CompulsionDelayAttempt> attempts = delayAttemptRepository.findByUserOrderByCreatedAtDesc(user);
         return attempts.stream()
                 .map(this::mapToResponse)
@@ -143,7 +137,7 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
     }
 
     private CompulsionDelayAttempt getAttemptByIdAndUser(Long id) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         return delayAttemptRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Compulsion delay attempt not found or unauthorized access: " + id));
     }

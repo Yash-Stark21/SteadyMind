@@ -7,6 +7,7 @@ import com.stark.steadyai.entity.User;
 import com.stark.steadyai.exception.ResourceNotFoundException;
 import com.stark.steadyai.repository.UrgeLogRepository;
 import com.stark.steadyai.repository.UserRepository;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +26,10 @@ public class UrgeLogService {
         this.userRepository = userRepository;
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 
     public UrgeLogResponse createUrgeLog(UrgeLogRequest request) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
 
         UrgeLog urgeLog = new UrgeLog();
         urgeLog.setUser(user);
@@ -51,20 +46,20 @@ public class UrgeLogService {
     }
 
     public List<UrgeLogResponse> getAllUrgeLogs() {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         List<UrgeLog> logs = urgeLogRepository.findByUserOrderByCreatedAtDesc(user);
         return logs.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     public UrgeLogResponse getUrgeLogById(Long id) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         UrgeLog log = urgeLogRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Urge log not found with id " + id));
         return mapToResponse(log);
     }
 
     public UrgeLogResponse updateUrgeLog(Long id, UrgeLogRequest request) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         UrgeLog log = urgeLogRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Urge log not found with id " + id));
 
@@ -81,7 +76,7 @@ public class UrgeLogService {
     }
 
     public void deleteUrgeLog(Long id) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         UrgeLog log = urgeLogRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Urge log not found with id " + id));
         urgeLogRepository.delete(log);

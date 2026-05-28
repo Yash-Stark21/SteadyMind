@@ -11,6 +11,7 @@ import com.stark.steadyai.repository.CompulsionDelayAttemptRepository;
 import com.stark.steadyai.repository.ExposureTaskRepository;
 import com.stark.steadyai.repository.UrgeLogRepository;
 import com.stark.steadyai.repository.UserRepository;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 public class ProgressAnalyticsService {
 
     private static final String SAFETY_NOTE =
-            "This dashboard is for self-reflection only and is not medical advice or a diagnosis.";
+            "This is for self-reflection only and is not medical advice or a diagnosis.";
 
     private final UrgeLogRepository urgeLogRepository;
     private final ExposureTaskRepository exposureTaskRepository;
@@ -53,7 +54,7 @@ public class ProgressAnalyticsService {
      * Builds the full progress analytics response for the current user.
      */
     public ProgressAnalyticsResponse getProgressAnalytics() {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
 
         List<UrgeLog> allUrgeLogs = urgeLogRepository.findByUser(user);
         List<ExposureTask> allExposureTasks = exposureTaskRepository.findByUserOrderByDifficultyLevelAsc(user);
@@ -295,11 +296,5 @@ public class ProgressAnalyticsService {
 
     // ---- User Resolution ----
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 }

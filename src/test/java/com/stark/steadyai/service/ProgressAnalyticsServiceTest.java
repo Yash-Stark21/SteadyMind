@@ -19,7 +19,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.AfterEach;
+import com.stark.steadyai.security.SecurityUtils;
+import static org.mockito.Mockito.mockStatic;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,6 +53,7 @@ class ProgressAnalyticsServiceTest {
 
     private ProgressAnalyticsService service;
     private User testUser;
+    private MockedStatic<SecurityUtils> mockedSecurityUtils;
 
     @BeforeEach
     void setUp() {
@@ -58,6 +63,15 @@ class ProgressAnalyticsServiceTest {
 
         testUser = new User("Demo User", "demo@steadyai.local", "hash");
         lenient().when(userRepository.findByEmail("demo@steadyai.local")).thenReturn(Optional.of(testUser));
+        mockedSecurityUtils = mockStatic(SecurityUtils.class);
+        mockedSecurityUtils.when(SecurityUtils::getCurrentUser).thenReturn(testUser);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (mockedSecurityUtils != null) {
+            mockedSecurityUtils.close();
+        }
     }
 
     @Test

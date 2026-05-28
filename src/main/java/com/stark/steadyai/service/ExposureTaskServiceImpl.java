@@ -8,6 +8,7 @@ import com.stark.steadyai.enums.ExposureStatus;
 import com.stark.steadyai.exception.ResourceNotFoundException;
 import com.stark.steadyai.repository.ExposureTaskRepository;
 import com.stark.steadyai.repository.UserRepository;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,17 +28,11 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
         this.userRepository = userRepository;
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 
     @Override
     public ExposureTaskResponse createExposureTask(ExposureTaskRequest request) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
 
         ExposureTask task = new ExposureTask();
         task.setUser(user);
@@ -52,14 +47,14 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
 
     @Override
     public List<ExposureTaskResponse> getAllExposureTasksForCurrentUser() {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         List<ExposureTask> tasks = exposureTaskRepository.findByUserOrderByDifficultyLevelAsc(user);
         return tasks.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
     
     @Override
     public List<ExposureTaskResponse> getExposureTasksByStatus(ExposureStatus status) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         List<ExposureTask> tasks = exposureTaskRepository.findByUserAndStatus(user, status);
         return tasks.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
@@ -111,7 +106,7 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
     }
 
     private ExposureTask getTaskByIdAndUser(Long id) {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         return exposureTaskRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Exposure task not found or unauthorized access: " + id));
     }

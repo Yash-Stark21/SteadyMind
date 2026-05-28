@@ -8,6 +8,7 @@ import com.stark.steadyai.repository.UserRepository;
 import com.stark.steadyai.service.AiCoachService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -85,19 +86,8 @@ public class AiCoachViewController {
      * until full Spring Security authentication is wired up.
      */
     private User getUser(Authentication authentication) {
-        // If real authentication is available, try to look up by email
-        if (authentication != null && authentication.getName() != null) {
-            return userRepository.findByEmail(authentication.getName())
-                    .orElseGet(this::getDemoUser);
-        }
-        return getDemoUser();
+        return SecurityUtils.getCurrentUser();
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 }

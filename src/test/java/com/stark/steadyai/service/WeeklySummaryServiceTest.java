@@ -13,7 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.AfterEach;
+import com.stark.steadyai.security.SecurityUtils;
+import static org.mockito.Mockito.mockStatic;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -39,12 +43,22 @@ class WeeklySummaryServiceTest {
 
     private WeeklySummaryService weeklySummaryService;
     private User testUser;
+    private MockedStatic<SecurityUtils> mockedSecurityUtils;
 
     @BeforeEach
     void setUp() {
         weeklySummaryService = new WeeklySummaryService(urgeLogRepository, userRepository, aiClient);
         testUser = new User("Demo User", "demo@steadyai.local", "hash");
         lenient().when(userRepository.findByEmail("demo@steadyai.local")).thenReturn(Optional.of(testUser));
+        mockedSecurityUtils = mockStatic(SecurityUtils.class);
+        mockedSecurityUtils.when(SecurityUtils::getCurrentUser).thenReturn(testUser);
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (mockedSecurityUtils != null) {
+            mockedSecurityUtils.close();
+        }
     }
 
     @Test

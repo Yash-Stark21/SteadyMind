@@ -8,6 +8,7 @@ import com.stark.steadyai.entity.UrgeLog;
 import com.stark.steadyai.entity.User;
 import com.stark.steadyai.repository.UrgeLogRepository;
 import com.stark.steadyai.repository.UserRepository;
+import com.stark.steadyai.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,16 +30,10 @@ public class WeeklySummaryService {
         this.aiClient = aiClient;
     }
 
-    private User getDemoUser() {
-        return userRepository.findByEmail("demo@steadyai.local")
-                .orElseGet(() -> {
-                    User newUser = new User("Demo User", "demo@steadyai.local", "TEMP_PASSWORD_HASH");
-                    return userRepository.save(newUser);
-                });
-    }
+
 
     public WeeklySummaryResponse getWeeklySummary() {
-        User user = getDemoUser();
+        User user = SecurityUtils.getCurrentUser();
         LocalDateTime end = LocalDateTime.now();
         LocalDateTime start = end.minusDays(7);
 
@@ -47,7 +42,7 @@ public class WeeklySummaryService {
         WeeklySummaryResponse response = new WeeklySummaryResponse();
         response.setStartDate(start.toLocalDate());
         response.setEndDate(end.toLocalDate());
-        response.setSafetyNote("This summary is not medical advice or a diagnosis.");
+        response.setSafetyNote("This is for self-reflection only and is not medical advice or a diagnosis.");
 
         if (logs.isEmpty()) {
             response.setTotalUrgeLogs(0);
