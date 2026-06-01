@@ -3,118 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Coach — SteadyMind</title>
-    <meta name="description" content="SteadyMind AI Wellness Coach — a controlled, supportive companion for building healthier habits.">
+    <title>AI Coach - SteadyMind</title>
+    <meta name="description" content="SteadyMind AI Wellness Coach - a controlled, supportive companion for building healthier habits.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
+
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
+        <div class="col-md-9 col-lg-8">
 
-            <!-- Page Header -->
             <div class="text-center mb-4">
                 <i class="bi bi-robot display-1 text-primary"></i>
                 <h1 class="h3 fw-bold mt-3">AI Wellness Coach</h1>
                 <p class="text-muted">Your supportive AI companion for building healthier habits.</p>
             </div>
 
-            <!-- Message Input Card -->
-            <div class="card steadyai-card mb-4">
-                <div class="card-body p-4">
-                    <form id="aiCoachForm">
-                        <div class="mb-3">
-                            <label for="coachMessage" class="form-label fw-semibold">
-                                <i class="bi bi-chat-dots me-1"></i>Share what's on your mind
-                            </label>
-                            <textarea class="form-control" id="coachMessage" rows="4"
-                                      placeholder="Describe what you're experiencing, thinking, or feeling..."
-                                      maxlength="1000" required></textarea>
-                            <div id="formError" class="text-danger small mt-1" style="display: none;"></div>
+            <div class="card steadyai-card ai-chat-card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center gap-3">
+                    <div class="fw-semibold">
+                        <i class="bi bi-chat-dots me-2"></i>Current Conversation
+                    </div>
+                    <button type="button" class="btn btn-light btn-sm" id="newChatBtn">
+                        <i class="bi bi-plus-lg me-1"></i>New Chat
+                    </button>
+                </div>
+
+                <div class="card-body p-0">
+                    <div id="chatMessages" class="ai-chat-messages">
+                        <div th:if="${#lists.isEmpty(activeMessages)}" id="emptyConversation" class="ai-chat-empty">
+                            <i class="bi bi-chat-square-text"></i>
+                            <div>Start a conversation with the coach.</div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100" id="askCoachBtn">
+
+                        <div th:each="msg : ${activeMessages}" class="ai-exchange">
+                            <div class="ai-bubble-row ai-bubble-row-user">
+                                <div class="ai-bubble ai-bubble-user">
+                                    <div class="ai-bubble-label">You</div>
+                                    <div th:text="${msg.userMessage}">User message</div>
+                                </div>
+                            </div>
+
+                            <div class="ai-bubble-row ai-bubble-row-coach">
+                                <div class="ai-bubble ai-bubble-coach">
+                                    <div class="ai-bubble-label">
+                                        <i class="bi bi-robot me-1 text-primary"></i>Coach
+                                    </div>
+                                    <div class="mb-2" th:text="${msg.aiResponse}">Coach response</div>
+                                    <div th:if="${showClinicalMetadata}" class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-info text-dark" th:text="${msg.intent}">INTENT</span>
+                                        <span class="badge"
+                                              th:classappend="${msg.riskLevel != null and msg.riskLevel.name() == 'HIGH'} ? ' bg-danger' : (${msg.riskLevel != null and msg.riskLevel.name() == 'MEDIUM'} ? ' bg-warning text-dark' : ' bg-success')"
+                                              th:text="${msg.riskLevel}">LOW</span>
+                                        <span class="badge bg-secondary" th:text="${msg.responseType}">TYPE</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <form id="aiCoachForm" th:action="@{/ai-coach}" method="post">
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <label for="coachMessage" class="form-label fw-semibold">
+                            <i class="bi bi-pencil-square me-1"></i>Message
+                        </label>
+                        <textarea class="form-control" id="coachMessage" name="message" rows="3"
+                                  placeholder="Describe what you're experiencing, thinking, or feeling..."
+                                  maxlength="1000" required></textarea>
+                        <div id="formError" class="text-danger small mt-2" style="display: none;"></div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3" id="askCoachBtn">
                             <i class="bi bi-send me-2"></i>Ask Coach
                         </button>
                     </form>
                 </div>
             </div>
 
-            <div id="responseContainer"></div>
-
-            <!-- AI Coach Response (shown after POST) -->
-            <!-- AI Coach Response (shown after POST from thymeleaf left as fallback, but JS will prepend to responseContainer) -->
-            <div th:if="${coachResponse}" class="card steadyai-card mb-4" id="coachResponseCard">
-                <div class="card-header bg-primary text-white fw-semibold">
-                    <i class="bi bi-robot me-2"></i>Coach Response
-                </div>
-                <div class="card-body p-4">
-                    <!-- User message echo -->
-                    <div class="mb-3">
-                        <small class="text-muted fw-semibold">Your message:</small>
-                        <p class="mb-0 fst-italic" th:text="${coachResponse.userMessage}"></p>
-                    </div>
-                    <hr>
-                    <!-- AI response -->
-                    <div class="mb-3">
-                        <p class="fw-semibold mb-1" th:text="${coachResponse.aiResponse}"></p>
-                    </div>
-                    <!-- Classification metadata -->
-                    <div class="d-flex flex-wrap gap-2 mt-3">
-                        <span class="badge bg-info text-dark">
-                            <i class="bi bi-bullseye me-1"></i>Intent:
-                            <span th:text="${coachResponse.intent}"></span>
-                        </span>
-                        <span class="badge"
-                              th:classappend="${coachResponse.riskLevel != null and coachResponse.riskLevel.name() == 'HIGH'} ? 'bg-danger' : (${coachResponse.riskLevel != null and coachResponse.riskLevel.name() == 'MEDIUM'} ? 'bg-warning text-dark' : 'bg-success')">
-                            <i class="bi bi-shield-check me-1"></i>Risk:
-                            <span th:text="${coachResponse.riskLevel}"></span>
-                        </span>
-                        <span class="badge bg-secondary">
-                            <i class="bi bi-diagram-3 me-1"></i>Type:
-                            <span th:text="${coachResponse.responseType}"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="historyContainer">
-            <!-- Recent Message History -->
-            <div th:if="${recentMessages != null and !recentMessages.isEmpty()}" class="card steadyai-card mb-4">
+            <div class="card steadyai-card mb-4" id="recentConversationsCard">
                 <div class="card-header bg-light fw-semibold">
                     <i class="bi bi-clock-history me-2"></i>Recent Conversations
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        <div th:each="msg : ${recentMessages}" class="list-group-item px-4 py-3">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <small class="text-muted">
-                                    <i class="bi bi-person me-1"></i>You:
+                <div class="list-group list-group-flush" id="recentConversationsList">
+                    <div th:if="${#lists.isEmpty(recentConversations)}" id="emptyRecentConversations" class="list-group-item px-4 py-3 text-muted small">
+                        No completed conversations yet.
+                    </div>
+
+                    <div th:each="conversation : ${recentConversations}" class="list-group-item px-4 py-3 recent-conversation-item">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="small fw-semibold text-body" th:text="${conversation.firstQuestion}">First question</div>
+                                <small class="text-muted"
+                                       th:text="${conversation.endedAt != null ? #temporals.format(conversation.endedAt, 'MMM dd, yyyy HH:mm') : ''}">
+                                    Jun 01, 2026 18:55
                                 </small>
-                                <small class="text-muted" th:text="${#temporals.format(msg.createdAt, 'MMM dd, yyyy HH:mm')}"></small>
                             </div>
-                            <p class="mb-2 fst-italic small" th:text="${msg.userMessage}"></p>
-                            <p class="mb-1 small fw-semibold"><i class="bi bi-robot me-1 text-primary"></i>
-                                <span th:text="${msg.aiResponse}"></span>
-                            </p>
-                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                <span class="badge bg-info text-dark" style="font-size: 0.7rem;"
-                                      th:text="${msg.intent}"></span>
-                                <span class="badge" style="font-size: 0.7rem;"
-                                      th:classappend="${msg.riskLevel.name() == 'HIGH'} ? 'bg-danger' : (${msg.riskLevel.name() == 'MEDIUM'} ? 'bg-warning text-dark' : 'bg-success')"
-                                      th:text="${msg.riskLevel}"></span>
-                                <span class="badge bg-secondary" style="font-size: 0.7rem;"
-                                      th:text="${msg.responseType}"></span>
-                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm view-conversation-btn"
+                                    th:attr="data-conversation-id=${conversation.conversationId},data-first-question=${conversation.firstQuestion}">
+                                <i class="bi bi-eye me-1"></i>View
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            </div>
 
-            <!-- Footer Info -->
             <div class="card steadyai-card mb-4">
                 <div class="card-body p-3">
                     <div class="text-muted small">
@@ -131,20 +126,44 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="conversationModal" tabindex="-1" aria-labelledby="conversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="conversationModalLabel">Conversation</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="oldConversationMessages" class="old-conversation-messages"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.getElementById('aiCoachForm').addEventListener('submit', async function(e) {
+<script th:inline="javascript">
+    const showClinicalMetadata = Boolean(/*[[${showClinicalMetadata}]]*/ false);
+    const chatMessages = document.getElementById('chatMessages');
+    const form = document.getElementById('aiCoachForm');
+    const messageInput = document.getElementById('coachMessage');
+    const askCoachBtn = document.getElementById('askCoachBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const errorDiv = document.getElementById('formError');
+    const recentList = document.getElementById('recentConversationsList');
+    const conversationModalEl = document.getElementById('conversationModal');
+    const oldConversationMessages = document.getElementById('oldConversationMessages');
+    const conversationModal = new bootstrap.Modal(conversationModalEl);
+
+    scrollChatToBottom();
+
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const messageInput = document.getElementById('coachMessage');
+
         const message = messageInput.value.trim();
-        const btn = document.getElementById('askCoachBtn');
-        const errorDiv = document.getElementById('formError');
-        
         if (!message) return;
-        
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Thinking...';
+
+        setFormBusy(true);
         errorDiv.style.display = 'none';
 
         try {
@@ -153,72 +172,234 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: message })
             });
-            
+
             if (!res.ok) {
                 const err = await res.text();
                 throw new Error(err || 'Failed to get response');
             }
-            
+
             const data = await res.json();
-            
-            // Build the card HTML dynamically
-            let riskClass = 'bg-success';
-            if (data.riskLevel === 'HIGH') riskClass = 'bg-danger';
-            else if (data.riskLevel === 'MEDIUM') riskClass = 'bg-warning text-dark';
-            
-            const newCard = document.createElement('div');
-            newCard.className = 'card steadyai-card mb-4 slide-in';
-            newCard.innerHTML = `
-                <div class="card-header bg-primary text-white fw-semibold">
-                    <i class="bi bi-robot me-2"></i>Coach Response
-                </div>
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <small class="text-muted fw-semibold">Your message:</small>
-                        <p class="mb-0 fst-italic">${escapeHtml(data.userMessage)}</p>
-                    </div>
-                    <hr>
-                    <div class="mb-3">
-                        <p class="fw-semibold mb-1">${escapeHtml(data.aiResponse)}</p>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
-                        <span class="badge bg-info text-dark">
-                            <i class="bi bi-bullseye me-1"></i>Intent:
-                            <span>${escapeHtml(data.intent)}</span>
-                        </span>
-                        <span class="badge ${riskClass}">
-                            <i class="bi bi-shield-check me-1"></i>Risk:
-                            <span>${escapeHtml(data.riskLevel)}</span>
-                        </span>
-                        <span class="badge bg-secondary">
-                            <i class="bi bi-diagram-3 me-1"></i>Type:
-                            <span>${escapeHtml(data.responseType)}</span>
-                        </span>
-                    </div>
-                </div>
-            `;
-            
-            // Hide the old thymeleaf card if it exists
-            const oldCard = document.getElementById('coachResponseCard');
-            if (oldCard) oldCard.style.display = 'none';
-            
-            document.getElementById('responseContainer').prepend(newCard);
+            appendExchange(data);
             messageInput.value = '';
-            
+
         } catch (e) {
             errorDiv.textContent = e.message;
             errorDiv.style.display = 'block';
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-send me-2"></i>Ask Coach';
+            setFormBusy(false);
         }
     });
-    
+
+    newChatBtn.addEventListener('click', async function() {
+        newChatBtn.disabled = true;
+        errorDiv.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/ai/conversations/new', { method: 'POST' });
+
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(err || 'Failed to start a new chat');
+            }
+
+            if (res.status !== 204) {
+                const summary = await res.json();
+                prependRecentConversation(summary);
+            }
+
+            clearCurrentConversation();
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            newChatBtn.disabled = false;
+        }
+    });
+
+    recentList.addEventListener('click', async function(e) {
+        const viewButton = e.target.closest('.view-conversation-btn');
+        if (!viewButton) return;
+
+        const conversationId = viewButton.dataset.conversationId;
+        if (!conversationId) return;
+
+        viewButton.disabled = true;
+        errorDiv.style.display = 'none';
+
+        try {
+            const res = await fetch(`/api/ai/conversations/${encodeURIComponent(conversationId)}/messages`);
+
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(err || 'Failed to load conversation');
+            }
+
+            const messages = await res.json();
+            renderOldConversation(viewButton.dataset.firstQuestion || 'Conversation', messages);
+            conversationModal.show();
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.style.display = 'block';
+        } finally {
+            viewButton.disabled = false;
+        }
+    });
+
+    function setFormBusy(isBusy) {
+        askCoachBtn.disabled = isBusy;
+        askCoachBtn.innerHTML = isBusy
+            ? '<span class="spinner-border spinner-border-sm me-1"></span> Thinking...'
+            : '<i class="bi bi-send me-2"></i>Ask Coach';
+    }
+
+    function appendExchange(data) {
+        removeEmptyConversation();
+
+        chatMessages.insertAdjacentHTML('beforeend', `
+            <div class="ai-exchange">
+                <div class="ai-bubble-row ai-bubble-row-user">
+                    <div class="ai-bubble ai-bubble-user">
+                        <div class="ai-bubble-label">You</div>
+                        <div>${escapeHtml(data.userMessage)}</div>
+                    </div>
+                </div>
+                <div class="ai-bubble-row ai-bubble-row-coach">
+                    <div class="ai-bubble ai-bubble-coach">
+                        <div class="ai-bubble-label"><i class="bi bi-robot me-1 text-primary"></i>Coach</div>
+                        <div class="mb-2">${escapeHtml(data.aiResponse)}</div>
+                        ${metadataHtml(data)}
+                    </div>
+                </div>
+            </div>
+        `);
+
+        scrollChatToBottom();
+    }
+
+    function clearCurrentConversation() {
+        messageInput.value = '';
+        chatMessages.innerHTML = `
+            <div id="emptyConversation" class="ai-chat-empty">
+                <i class="bi bi-chat-square-text"></i>
+                <div>Start a conversation with the coach.</div>
+            </div>
+        `;
+    }
+
+    function prependRecentConversation(summary) {
+        const emptyRecent = document.getElementById('emptyRecentConversations');
+        if (emptyRecent) emptyRecent.remove();
+
+        recentList.insertAdjacentHTML('afterbegin', `
+            <div class="list-group-item px-4 py-3 recent-conversation-item">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="small fw-semibold text-body">${escapeHtml(summary.firstQuestion)}</div>
+                        <small class="text-muted">${escapeHtml(formatDate(summary.endedAt))}</small>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm view-conversation-btn"
+                            data-conversation-id="${escapeHtml(summary.conversationId)}"
+                            data-first-question="${escapeAttribute(summary.firstQuestion)}">
+                        <i class="bi bi-eye me-1"></i>View
+                    </button>
+                </div>
+            </div>
+        `);
+    }
+
+    function renderOldConversation(title, messages) {
+        document.getElementById('conversationModalLabel').textContent = title;
+
+        if (!messages || messages.length === 0) {
+            oldConversationMessages.innerHTML = `
+                <div class="ai-chat-empty">
+                    <i class="bi bi-chat-square-text"></i>
+                    <div>No messages in this conversation.</div>
+                </div>
+            `;
+            return;
+        }
+
+        oldConversationMessages.innerHTML = messages.map(exchangeHtml).join('');
+        oldConversationMessages.scrollTop = oldConversationMessages.scrollHeight;
+    }
+
+    function exchangeHtml(data) {
+        return `
+            <div class="ai-exchange">
+                <div class="ai-bubble-row ai-bubble-row-user">
+                    <div class="ai-bubble ai-bubble-user">
+                        <div class="ai-bubble-label">You</div>
+                        <div>${escapeHtml(data.userMessage)}</div>
+                    </div>
+                </div>
+                <div class="ai-bubble-row ai-bubble-row-coach">
+                    <div class="ai-bubble ai-bubble-coach">
+                        <div class="ai-bubble-label"><i class="bi bi-robot me-1 text-primary"></i>Coach</div>
+                        <div class="mb-2">${escapeHtml(data.aiResponse)}</div>
+                        ${metadataHtml(data)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function metadataHtml(data) {
+        if (!showClinicalMetadata || !data.intent || !data.riskLevel || !data.responseType) {
+            return '';
+        }
+
+        return `
+            <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-info text-dark">${escapeHtml(data.intent)}</span>
+                <span class="badge ${riskClass(data.riskLevel)}">${escapeHtml(data.riskLevel)}</span>
+                <span class="badge bg-secondary">${escapeHtml(data.responseType)}</span>
+            </div>
+        `;
+    }
+
+    function removeEmptyConversation() {
+        const emptyConversation = document.getElementById('emptyConversation');
+        if (emptyConversation) emptyConversation.remove();
+    }
+
+    function scrollChatToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function riskClass(riskLevel) {
+        if (riskLevel === 'HIGH') return 'bg-danger';
+        if (riskLevel === 'MEDIUM') return 'bg-warning text-dark';
+        return 'bg-success';
+    }
+
+    function formatDate(value) {
+        if (!value) return '';
+
+        const date = Array.isArray(value)
+            ? new Date(value[0], value[1] - 1, value[2], value[3] || 0, value[4] || 0)
+            : new Date(value);
+
+        if (Number.isNaN(date.getTime())) return '';
+
+        return date.toLocaleString([], {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
     function escapeHtml(text) {
-        if (!text) return '';
+        if (text === null || text === undefined) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function escapeAttribute(text) {
+        return escapeHtml(text).replaceAll('"', '&quot;');
     }
 </script>
 </body>

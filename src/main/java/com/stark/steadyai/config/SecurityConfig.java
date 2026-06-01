@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/therapist/**").hasAuthority("ROLE_THERAPIST")
+                        .requestMatchers("/api/ai/**").hasAnyAuthority("ROLE_USER", "ROLE_THERAPIST")
                         .requestMatchers("/api/**").hasAuthority("ROLE_USER")
                         .anyRequest().authenticated()
                 )

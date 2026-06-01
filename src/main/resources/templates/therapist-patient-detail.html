@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${patient.name + ' - Therapist View'}">Therapist View</title>
+    <meta name="description" content="Read-only therapist patient detail view">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <a th:href="@{/therapist}" class="btn btn-outline-secondary btn-sm mb-3">
+                <i class="bi bi-arrow-left me-1"></i>Assigned Users
+            </a>
+            <h1 class="display-6 fw-bold text-primary mb-1" th:text="${patient.name}">Patient Name</h1>
+            <p class="text-muted mb-0" th:text="${patient.email}">patient@example.com</p>
+        </div>
+        <span class="badge bg-secondary align-self-start">Read-only</span>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card steadyai-card summary-card h-100">
+                <div class="card-body text-center">
+                    <div class="summary-icon text-info mb-2"><i class="bi bi-journal-text fs-1"></i></div>
+                    <h5 class="card-title text-muted">Moment Logs</h5>
+                    <p class="display-5 fw-bold" th:text="${summary.totalUrgeLogs}">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card steadyai-card summary-card h-100">
+                <div class="card-body text-center">
+                    <div class="summary-icon text-warning mb-2"><i class="bi bi-lightning-charge fs-1"></i></div>
+                    <h5 class="card-title text-muted">Challenges</h5>
+                    <p class="display-5 fw-bold" th:text="${summary.totalExposureTasks}">0</p>
+                    <small class="text-muted"><span th:text="${summary.completedExposureTasks}">0</span> completed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card steadyai-card summary-card h-100">
+                <div class="card-body text-center">
+                    <div class="summary-icon text-danger mb-2"><i class="bi bi-stopwatch fs-1"></i></div>
+                    <h5 class="card-title text-muted">Delay Attempts</h5>
+                    <p class="display-5 fw-bold" th:text="${summary.totalDelayAttempts}">0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card steadyai-card summary-card h-100">
+                <div class="card-body text-center">
+                    <div class="summary-icon text-primary mb-2"><i class="bi bi-chat-dots fs-1"></i></div>
+                    <h5 class="card-title text-muted">AI Chats</h5>
+                    <p class="display-5 fw-bold" th:text="${summary.totalAiConversations}">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="patientRecordTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-pane" type="button" role="tab">Moment Logs</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="exposures-tab" data-bs-toggle="tab" data-bs-target="#exposures-pane" type="button" role="tab">Challenges</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="delays-tab" data-bs-toggle="tab" data-bs-target="#delays-pane" type="button" role="tab">Delay Attempts</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="chats-tab" data-bs-toggle="tab" data-bs-target="#chats-pane" type="button" role="tab">AI Conversations</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="logs-pane" role="tabpanel" aria-labelledby="logs-tab">
+            <div class="card steadyai-card mb-4">
+                <div class="card-header bg-light fw-semibold">Moment Logs</div>
+                <div th:if="${#lists.isEmpty(urgeLogs)}" class="card-body text-muted small">No moment logs recorded.</div>
+                <div th:if="${!#lists.isEmpty(urgeLogs)}" class="table-responsive">
+                    <table class="table steadyai-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Trigger</th>
+                            <th>Compulsion urge</th>
+                            <th>Intensity</th>
+                            <th>Delay</th>
+                            <th>Created</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="log : ${urgeLogs}">
+                            <td>
+                                <div class="fw-semibold" th:text="${log.triggerText}">Trigger</div>
+                                <small class="text-muted" th:text="${log.obsessionText}">Thought</small>
+                            </td>
+                            <td th:text="${log.compulsionUrge}">Compulsion</td>
+                            <td>
+                                <span th:text="${log.intensityBefore}">0</span>
+                                <span th:if="${log.intensityAfter != null}"> -> <span th:text="${log.intensityAfter}">0</span></span>
+                            </td>
+                            <td><span th:text="${log.delayMinutes}">0</span> min</td>
+                            <td class="text-muted text-nowrap" th:text="${#temporals.format(log.createdAt, 'MMM dd, yyyy HH:mm')}">Date</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="exposures-pane" role="tabpanel" aria-labelledby="exposures-tab">
+            <div class="card steadyai-card mb-4">
+                <div class="card-header bg-light fw-semibold">Growth Challenges</div>
+                <div th:if="${#lists.isEmpty(exposureTasks)}" class="card-body text-muted small">No challenges created.</div>
+                <div th:if="${!#lists.isEmpty(exposureTasks)}" class="table-responsive">
+                    <table class="table steadyai-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Challenge</th>
+                            <th>Difficulty</th>
+                            <th>Status</th>
+                            <th>Target</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="task : ${exposureTasks}">
+                            <td>
+                                <div class="fw-semibold" th:text="${task.title}">Title</div>
+                                <small class="text-muted" th:text="${task.description}">Description</small>
+                            </td>
+                            <td th:text="${task.difficultyLevel}">LOW</td>
+                            <td th:text="${task.status}">PENDING</td>
+                            <td class="text-muted text-nowrap" th:text="${task.targetDate != null ? #temporals.format(task.targetDate, 'MMM dd, yyyy') : '-'}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="delays-pane" role="tabpanel" aria-labelledby="delays-tab">
+            <div class="card steadyai-card mb-4">
+                <div class="card-header bg-light fw-semibold">Delay Attempts</div>
+                <div th:if="${#lists.isEmpty(delayAttempts)}" class="card-body text-muted small">No delay attempts recorded.</div>
+                <div th:if="${!#lists.isEmpty(delayAttempts)}" class="table-responsive">
+                    <table class="table steadyai-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Trigger</th>
+                            <th>Planned</th>
+                            <th>Actual</th>
+                            <th>Outcome</th>
+                            <th>Created</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="attempt : ${delayAttempts}">
+                            <td>
+                                <div th:text="${attempt.triggerDescription ?: '-'}">Trigger</div>
+                                <small class="text-muted" th:text="${attempt.notes}">Notes</small>
+                            </td>
+                            <td><span th:text="${attempt.plannedDelayMinutes}">0</span> min</td>
+                            <td th:text="${attempt.actualDelayMinutes != null ? attempt.actualDelayMinutes + ' min' : '-'}">-</td>
+                            <td th:text="${attempt.outcome ?: '-'}">-</td>
+                            <td class="text-muted text-nowrap" th:text="${attempt.createdAt != null ? #temporals.format(attempt.createdAt, 'MMM dd, yyyy HH:mm') : '-'}">Date</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="chats-pane" role="tabpanel" aria-labelledby="chats-tab">
+            <div class="card steadyai-card mb-4">
+                <div class="card-header bg-light fw-semibold">AI Conversations</div>
+                <div th:if="${#lists.isEmpty(aiConversations)}" class="card-body text-muted small">No AI conversations recorded.</div>
+                <div th:if="${!#lists.isEmpty(aiConversations)}" class="list-group list-group-flush" id="patientConversationList">
+                    <div th:each="conversation : ${aiConversations}" class="list-group-item px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="fw-semibold small" th:text="${conversation.firstQuestion}">First question</div>
+                                <small class="text-muted"
+                                       th:text="${conversation.endedAt != null ? #temporals.format(conversation.endedAt, 'MMM dd, yyyy HH:mm') : 'Active conversation'}">
+                                    Date
+                                </small>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm view-conversation-btn"
+                                    th:attr="data-conversation-id=${conversation.conversationId},data-first-question=${conversation.firstQuestion}">
+                                <i class="bi bi-eye me-1"></i>View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="conversationModal" tabindex="-1" aria-labelledby="conversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="conversationModalLabel">Conversation</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="oldConversationMessages" class="old-conversation-messages"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    const patientId = /*[[${patient.id}]]*/ 0;
+    const conversationList = document.getElementById('patientConversationList');
+    const oldConversationMessages = document.getElementById('oldConversationMessages');
+    const conversationModalEl = document.getElementById('conversationModal');
+    const conversationModal = new bootstrap.Modal(conversationModalEl);
+
+    if (conversationList) {
+        conversationList.addEventListener('click', async function(e) {
+            const viewButton = e.target.closest('.view-conversation-btn');
+            if (!viewButton) return;
+
+            const conversationId = viewButton.dataset.conversationId;
+            if (!conversationId) return;
+
+            viewButton.disabled = true;
+            try {
+                const res = await fetch(`/api/therapist/patients/${encodeURIComponent(patientId)}/ai/conversations/${encodeURIComponent(conversationId)}/messages`);
+                if (!res.ok) {
+                    throw new Error('Failed to load conversation');
+                }
+
+                const messages = await res.json();
+                renderConversation(viewButton.dataset.firstQuestion || 'Conversation', messages);
+                conversationModal.show();
+            } finally {
+                viewButton.disabled = false;
+            }
+        });
+    }
+
+    function renderConversation(title, messages) {
+        document.getElementById('conversationModalLabel').textContent = title;
+
+        if (!messages || messages.length === 0) {
+            oldConversationMessages.innerHTML = `
+                <div class="ai-chat-empty">
+                    <i class="bi bi-chat-square-text"></i>
+                    <div>No messages in this conversation.</div>
+                </div>
+            `;
+            return;
+        }
+
+        oldConversationMessages.innerHTML = messages.map(exchangeHtml).join('');
+        oldConversationMessages.scrollTop = oldConversationMessages.scrollHeight;
+    }
+
+    function exchangeHtml(data) {
+        return `
+            <div class="ai-exchange">
+                <div class="ai-bubble-row ai-bubble-row-user">
+                    <div class="ai-bubble ai-bubble-user">
+                        <div class="ai-bubble-label">User</div>
+                        <div>${escapeHtml(data.userMessage)}</div>
+                    </div>
+                </div>
+                <div class="ai-bubble-row ai-bubble-row-coach">
+                    <div class="ai-bubble ai-bubble-coach">
+                        <div class="ai-bubble-label"><i class="bi bi-robot me-1 text-primary"></i>Coach</div>
+                        <div class="mb-2">${escapeHtml(data.aiResponse)}</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-info text-dark">${escapeHtml(data.intent)}</span>
+                            <span class="badge ${riskClass(data.riskLevel)}">${escapeHtml(data.riskLevel)}</span>
+                            <span class="badge bg-secondary">${escapeHtml(data.responseType)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function riskClass(riskLevel) {
+        if (riskLevel === 'HIGH') return 'bg-danger';
+        if (riskLevel === 'MEDIUM') return 'bg-warning text-dark';
+        return 'bg-success';
+    }
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+</body>
+</html>

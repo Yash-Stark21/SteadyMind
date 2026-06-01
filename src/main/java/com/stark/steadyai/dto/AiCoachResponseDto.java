@@ -1,44 +1,27 @@
 package com.stark.steadyai.dto;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.stark.steadyai.enums.CoachIntent;
 import com.stark.steadyai.enums.ResponseType;
 import com.stark.steadyai.enums.RiskLevel;
 import com.stark.steadyai.enums.SuggestedAction;
 
-/**
- * Response DTO returned after the AI Coach pipeline processes a user message.
- * Contains the original message, AI response, classification metadata,
- * and Day 8 policy-layer fields (directAnswerAllowed, userFacingMessage, suggestedAction).
- */
+@JsonPropertyOrder({
+        "intent",
+        "riskLevel",
+        "responseType",
+        "directAnswerAllowed",
+        "userFacingMessage",
+        "suggestedAction"
+})
 public class AiCoachResponseDto {
 
-    private String userMessage;
-    private String aiResponse;
     private CoachIntent intent;
     private RiskLevel riskLevel;
     private ResponseType responseType;
     private boolean directAnswerAllowed;
     private String userFacingMessage;
     private SuggestedAction suggestedAction;
-
-    public AiCoachResponseDto() {
-    }
-
-    public String getUserMessage() {
-        return userMessage;
-    }
-
-    public void setUserMessage(String userMessage) {
-        this.userMessage = userMessage;
-    }
-
-    public String getAiResponse() {
-        return aiResponse;
-    }
-
-    public void setAiResponse(String aiResponse) {
-        this.aiResponse = aiResponse;
-    }
 
     public CoachIntent getIntent() {
         return intent;

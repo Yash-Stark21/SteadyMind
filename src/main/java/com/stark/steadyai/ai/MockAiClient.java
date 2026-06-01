@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 /**
  * Mock AI client that returns deterministic, keyword-based responses.
  * Active only when the "mock-ai" Spring profile is enabled.
- *
  * This allows the full AI Coach pipeline to run without an OpenAI API key
  * or any external network dependency.
  */
@@ -24,19 +23,8 @@ public class MockAiClient implements AiClient {
     public AiCoachResponseDto generateResponse(AiCoachRequestDto requestDto) {
         String message = requestDto.message().trim().toLowerCase();
 
-        // --- Weekly Summary ---
-        if (containsAny(message, "weekly summary")) {
-            return buildResponse(
-                    CoachIntent.WEEKLY_SUMMARY,
-                    RiskLevel.LOW,
-                    ResponseType.REFLECTION_PROMPT,
-                    true,
-                    "Progress: You have been consistent with your logs this week. | "
-                            + "Patterns: We noticed urges are often tied to specific times of day. | "
-                            + "Steps: Try practicing a 5-minute delay when you feel the next urge.",
-                    SuggestedAction.NONE
-            );
-        }
+
+
 
         // --- Crisis / self-harm ---
         if (containsAny(message, "suicide", "kill myself", "end my life",

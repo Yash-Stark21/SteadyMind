@@ -1,10 +1,12 @@
 package com.stark.steadyai.controller;
 
+import com.stark.steadyai.dto.AiCoachExchangeResponseDto;
 import com.stark.steadyai.entity.User;
 import com.stark.steadyai.service.TherapistService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +30,15 @@ public class TherapistController {
                 .map(u -> new PatientDto(u.getId(), u.getName(), u.getEmail()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(patients);
+    }
+
+    @GetMapping("/patients/{patientId}/ai/conversations/{conversationId}/messages")
+    public ResponseEntity<List<AiCoachExchangeResponseDto>> getPatientConversationMessages(
+            @PathVariable Long patientId,
+            @PathVariable Long conversationId) {
+
+        List<AiCoachExchangeResponseDto> messages = therapistService.getPatientConversationMessages(patientId, conversationId);
+        return ResponseEntity.ok(messages);
     }
 
     public static class PatientDto {

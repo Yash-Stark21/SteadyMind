@@ -328,3 +328,106 @@ body {
     text-align: center;
 }
 
+/* ============================================
+   AI Coach Conversation
+   ============================================ */
+.ai-chat-card {
+    overflow: hidden;
+}
+
+.ai-chat-messages {
+    min-height: 360px;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #eef3f8;
+}
+
+.old-conversation-messages {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #eef3f8;
+    border-radius: 8px;
+}
+
+.ai-chat-empty {
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #6c757d;
+    text-align: center;
+}
+
+.ai-chat-empty i {
+    font-size: 2.25rem;
+    opacity: 0.65;
+}
+
+.ai-exchange + .ai-exchange {
+    margin-top: 1rem;
+}
+
+.ai-bubble-row {
+    display: flex;
+    width: 100%;
+}
+
+.ai-bubble-row + .ai-bubble-row {
+    margin-top: 0.5rem;
+}
+
+.ai-bubble-row-user {
+    justify-content: flex-end;
+}
+
+.ai-bubble-row-coach {
+    justify-content: flex-start;
+}
+
+.ai-bubble {
+    max-width: min(80%, 42rem);
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+
+.ai-bubble-user {
+    color: #fff;
+    background: #0d6efd;
+    border-bottom-right-radius: 4px;
+}
+
+.ai-bubble-coach {
+    color: #212529;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-bottom-left-radius: 4px;
+}
+
+.ai-bubble-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+}
+
+.recent-conversation-item {
+    cursor: default;
+}
+
+@media (max-width: 576px) {
+    .ai-chat-messages {
+        min-height: 300px;
+        max-height: 58vh;
+        padding: 0.75rem;
+    }
+
+    .ai-bubble {
+        max-width: 92%;
+    }
+}

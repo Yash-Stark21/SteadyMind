@@ -19,6 +19,10 @@ public class AiMessage {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "conversation_id", nullable = false)
+    private AiConversation conversation;
+
     @Column(nullable = false, length = 1000)
     private String userMessage;
 
@@ -56,6 +60,10 @@ public class AiMessage {
         return user;
     }
 
+    public AiConversation getConversation() {
+        return conversation;
+    }
+
     public String getUserMessage() {
         return userMessage;
     }
@@ -86,6 +94,10 @@ public class AiMessage {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setConversation(AiConversation conversation) {
+        this.conversation = conversation;
     }
 
     public void setUserMessage(String userMessage) {
