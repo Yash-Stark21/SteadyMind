@@ -36,10 +36,10 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
 
         ExposureTask task = new ExposureTask();
         task.setUser(user);
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setDifficultyLevel(request.getDifficultyLevel());
-        task.setTargetDate(request.getTargetDate());
+        task.setTitle(request.title());
+        task.setDescription(request.description());
+        task.setDifficultyLevel(request.difficultyLevel());
+        task.setTargetDate(request.targetDate());
         
         ExposureTask savedTask = exposureTaskRepository.save(task);
         return mapToResponse(savedTask);
@@ -69,10 +69,10 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
     public ExposureTaskResponse updateExposureTask(Long id, ExposureTaskRequest request) {
         ExposureTask task = getTaskByIdAndUser(id);
 
-        task.setTitle(request.getTitle());
-        task.setDescription(request.getDescription());
-        task.setDifficultyLevel(request.getDifficultyLevel());
-        task.setTargetDate(request.getTargetDate());
+        task.setTitle(request.title());
+        task.setDescription(request.description());
+        task.setDifficultyLevel(request.difficultyLevel());
+        task.setTargetDate(request.targetDate());
 
         ExposureTask updatedTask = exposureTaskRepository.save(task);
         return mapToResponse(updatedTask);
@@ -121,16 +121,16 @@ public class ExposureTaskServiceImpl implements ExposureTaskService {
     }
 
     private ExposureTaskResponse mapToResponse(ExposureTask task) {
-        ExposureTaskResponse response = new ExposureTaskResponse();
-        response.setId(task.getId());
-        response.setTitle(task.getTitle());
-        response.setDescription(task.getDescription());
-        response.setDifficultyLevel(task.getDifficultyLevel());
-        response.setStatus(task.getStatus());
-        response.setTargetDate(task.getTargetDate());
-        response.setCompletedAt(task.getCompletedAt());
-        response.setCreatedAt(task.getCreatedAt());
-        response.setUpdatedAt(task.getUpdatedAt());
-        return response;
+        return new ExposureTaskResponse(
+                task.getId(),
+                task.getTitle(),
+                task.getDescription(),
+                task.getDifficultyLevel(),
+                task.getStatus(),
+                task.getTargetDate(),
+                task.getCompletedAt(),
+                task.getCreatedAt(),
+                task.getUpdatedAt()
+        );
     }
 }

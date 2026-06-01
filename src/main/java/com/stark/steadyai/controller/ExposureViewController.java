@@ -44,7 +44,7 @@ public class ExposureViewController {
      */
     @GetMapping("/new")
     public String showCreateForm(Model model) {
-        model.addAttribute("exposureTaskRequest", new ExposureTaskRequest());
+        model.addAttribute("exposureTaskRequest", new ExposureTaskRequest(null, null, null, null));
         model.addAttribute("difficultyLevels", ExposureDifficulty.values());
         return "exposure-form";
     }

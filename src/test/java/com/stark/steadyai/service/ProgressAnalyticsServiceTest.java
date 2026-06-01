@@ -84,26 +84,26 @@ class ProgressAnalyticsServiceTest {
 
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
-        assertEquals(0, response.getTotalUrgeLogs());
-        assertEquals(0.0, response.getAverageUrgeIntensity());
-        assertEquals(0, response.getHighestUrgeIntensity());
-        assertEquals(0, response.getTotalExposureTasks());
-        assertEquals(0, response.getCompletedExposureTasks());
-        assertEquals(0, response.getPendingExposureTasks());
-        assertEquals(0, response.getTotalDelayAttempts());
-        assertEquals(0, response.getCompletedDelayAttempts());
-        assertEquals(0, response.getCancelledDelayAttempts());
-        assertEquals(0.0, response.getAverageDelayMinutes());
-        assertNotNull(response.getSevenDayUrgeTrend());
-        assertEquals(7, response.getSevenDayUrgeTrend().size());
-        assertNotNull(response.getTriggerBreakdown());
-        assertTrue(response.getTriggerBreakdown().isEmpty());
-        assertNotNull(response.getIntensityDistribution());
-        assertEquals(3, response.getIntensityDistribution().size());
-        assertNotNull(response.getProgressObservations());
-        assertTrue(response.getProgressObservations().isEmpty());
-        assertNotNull(response.getSafetyNote());
-        assertTrue(response.getSafetyNote().contains("self-reflection"));
+        assertEquals(0, response.totalUrgeLogs());
+        assertEquals(0.0, response.averageUrgeIntensity());
+        assertEquals(0, response.highestUrgeIntensity());
+        assertEquals(0, response.totalExposureTasks());
+        assertEquals(0, response.completedExposureTasks());
+        assertEquals(0, response.pendingExposureTasks());
+        assertEquals(0, response.totalDelayAttempts());
+        assertEquals(0, response.completedDelayAttempts());
+        assertEquals(0, response.cancelledDelayAttempts());
+        assertEquals(0.0, response.averageDelayMinutes());
+        assertNotNull(response.sevenDayUrgeTrend());
+        assertEquals(7, response.sevenDayUrgeTrend().size());
+        assertNotNull(response.triggerBreakdown());
+        assertTrue(response.triggerBreakdown().isEmpty());
+        assertNotNull(response.intensityDistribution());
+        assertEquals(3, response.intensityDistribution().size());
+        assertNotNull(response.progressObservations());
+        assertTrue(response.progressObservations().isEmpty());
+        assertNotNull(response.safetyNote());
+        assertTrue(response.safetyNote().contains("self-reflection"));
     }
 
     @Test
@@ -121,9 +121,9 @@ class ProgressAnalyticsServiceTest {
 
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
-        assertEquals(3, response.getTotalUrgeLogs());
-        assertEquals(6.0, response.getAverageUrgeIntensity()); // (8+4+6)/3 = 6.0
-        assertEquals(8, response.getHighestUrgeIntensity());
+        assertEquals(3, response.totalUrgeLogs());
+        assertEquals(6.0, response.averageUrgeIntensity()); // (8+4+6)/3 = 6.0
+        assertEquals(8, response.highestUrgeIntensity());
     }
 
     @Test
@@ -142,13 +142,13 @@ class ProgressAnalyticsServiceTest {
 
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
-        List<TriggerBreakdownResponse> breakdown = response.getTriggerBreakdown();
+        List<TriggerBreakdownResponse> breakdown = response.triggerBreakdown();
         assertEquals(2, breakdown.size());
         // Sorted descending by count: Stress first
-        assertEquals("Stress", breakdown.get(0).getTrigger());
-        assertEquals(3, breakdown.get(0).getCount());
-        assertEquals("Boredom", breakdown.get(1).getTrigger());
-        assertEquals(1, breakdown.get(1).getCount());
+        assertEquals("Stress", breakdown.get(0).trigger());
+        assertEquals(3, breakdown.get(0).count());
+        assertEquals("Boredom", breakdown.get(1).trigger());
+        assertEquals(1, breakdown.get(1).count());
     }
 
     @Test
@@ -168,11 +168,11 @@ class ProgressAnalyticsServiceTest {
 
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
-        List<IntensityDistributionResponse> dist = response.getIntensityDistribution();
+        List<IntensityDistributionResponse> dist = response.intensityDistribution();
         assertEquals(3, dist.size());
-        assertEquals(2, dist.get(0).getCount()); // Low (1-3)
-        assertEquals(1, dist.get(1).getCount()); // Medium (4-6)
-        assertEquals(2, dist.get(2).getCount()); // High (7-10)
+        assertEquals(2, dist.get(0).count()); // Low (1-3)
+        assertEquals(1, dist.get(1).count()); // Medium (4-6)
+        assertEquals(2, dist.get(2).count()); // High (7-10)
     }
 
     @Test
@@ -189,26 +189,26 @@ class ProgressAnalyticsServiceTest {
 
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
-        List<TrendPointResponse> trend = response.getSevenDayUrgeTrend();
+        List<TrendPointResponse> trend = response.sevenDayUrgeTrend();
         assertEquals(7, trend.size());
 
         // Verify dates cover last 7 days
-        assertEquals(today.minusDays(6).toString(), trend.get(0).getDate());
-        assertEquals(today.toString(), trend.get(6).getDate());
+        assertEquals(today.minusDays(6).toString(), trend.get(0).date());
+        assertEquals(today.toString(), trend.get(6).date());
 
         // Verify today and yesterday have data, others are 0
         TrendPointResponse todayPoint = trend.get(6);
-        assertEquals(1, todayPoint.getCount());
-        assertEquals(5.0, todayPoint.getAverageIntensity());
+        assertEquals(1, todayPoint.count());
+        assertEquals(5.0, todayPoint.averageIntensity());
 
         TrendPointResponse yesterdayPoint = trend.get(5);
-        assertEquals(1, yesterdayPoint.getCount());
-        assertEquals(7.0, yesterdayPoint.getAverageIntensity());
+        assertEquals(1, yesterdayPoint.count());
+        assertEquals(7.0, yesterdayPoint.averageIntensity());
 
         // Day with no logs should be 0
         TrendPointResponse emptyDay = trend.get(0);
-        assertEquals(0, emptyDay.getCount());
-        assertEquals(0.0, emptyDay.getAverageIntensity());
+        assertEquals(0, emptyDay.count());
+        assertEquals(0.0, emptyDay.averageIntensity());
     }
 
     @Test
@@ -236,15 +236,15 @@ class ProgressAnalyticsServiceTest {
         ProgressAnalyticsResponse response = service.getProgressAnalytics();
 
         // Exposure
-        assertEquals(4, response.getTotalExposureTasks());
-        assertEquals(1, response.getCompletedExposureTasks());
-        assertEquals(2, response.getPendingExposureTasks());
+        assertEquals(4, response.totalExposureTasks());
+        assertEquals(1, response.completedExposureTasks());
+        assertEquals(2, response.pendingExposureTasks());
 
         // Delay
-        assertEquals(4, response.getTotalDelayAttempts());
-        assertEquals(2, response.getCompletedDelayAttempts());
-        assertEquals(1, response.getCancelledDelayAttempts());
-        assertEquals(11.7, response.getAverageDelayMinutes()); // (10+20+5)/3 = 11.666... → 11.7
+        assertEquals(4, response.totalDelayAttempts());
+        assertEquals(2, response.completedDelayAttempts());
+        assertEquals(1, response.cancelledDelayAttempts());
+        assertEquals(11.7, response.averageDelayMinutes()); // (10+20+5)/3 = 11.666... → 11.7
     }
 
     // ---- Helper methods ----

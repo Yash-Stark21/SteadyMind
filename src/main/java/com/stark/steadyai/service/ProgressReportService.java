@@ -36,50 +36,44 @@ public class ProgressReportService {
     }
 
     public ProgressReportResponse generateReport(User user, int days) {
-        // We reuse the existing services. Currently they fetch for the demo user internally, 
-        // but since auth is partially implemented, we'll build the report using the available data.
-        
         ProgressAnalyticsResponse analytics = progressAnalyticsService.getProgressAnalytics();
         WeeklySummaryResponse weeklySummary = weeklySummaryService.getWeeklySummary();
 
-        ProgressReportResponse report = new ProgressReportResponse();
-        report.setGeneratedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        report.setStartDate(LocalDate.now().minusDays(days - 1).toString());
-        report.setEndDate(LocalDate.now().toString());
-        report.setUserDisplayName(user != null ? user.getName() : "Demo User");
+        String generatedAt = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String startDate = LocalDate.now().minusDays(days - 1).toString();
+        String endDate = LocalDate.now().toString();
+        String userDisplayName = user != null ? user.getName() : "Demo User";
 
-        report.setTotalUrgeLogs(analytics.getTotalUrgeLogs());
-        report.setAverageUrgeIntensity(analytics.getAverageUrgeIntensity());
-        
         String mostCommonTrigger = "N/A";
-        if (analytics.getTriggerBreakdown() != null && !analytics.getTriggerBreakdown().isEmpty()) {
-            mostCommonTrigger = analytics.getTriggerBreakdown().get(0).getTrigger();
+        if (analytics.triggerBreakdown() != null && !analytics.triggerBreakdown().isEmpty()) {
+            mostCommonTrigger = analytics.triggerBreakdown().get(0).trigger();
         }
-        report.setMostCommonTrigger(mostCommonTrigger);
 
-        report.setCompletedExposureTasks(analytics.getCompletedExposureTasks());
-        report.setPendingExposureTasks(analytics.getPendingExposureTasks());
-        report.setCompletedDelayAttempts(analytics.getCompletedDelayAttempts());
-        report.setAverageDelayMinutes(analytics.getAverageDelayMinutes());
+        String weeklySummaryText;
+        List<String> keyObservations;
+        List<String> suggestedNextSteps;
 
-        if (analytics.getTotalUrgeLogs() == 0 && analytics.getTotalExposureTasks() == 0 && analytics.getTotalDelayAttempts() == 0) {
-            report.setWeeklySummary("No progress data was found for this period. Start logging urges, delay attempts, and exposure tasks to generate a meaningful report.");
-            report.setKeyObservations(new ArrayList<>());
-            report.setSuggestedNextSteps(new ArrayList<>());
+        if (analytics.totalUrgeLogs() == 0 && analytics.totalExposureTasks() == 0 && analytics.totalDelayAttempts() == 0) {
+            weeklySummaryText = "No progress data was found for this period. Start logging urges, delay attempts, and exposure tasks to generate a meaningful report.";
+            keyObservations = new ArrayList<>();
+            suggestedNextSteps = new ArrayList<>();
         } else {
-            report.setWeeklySummary(weeklySummary.getProgressObservations());
-            report.setKeyObservations(analytics.getProgressObservations());
-            
+            weeklySummaryText = weeklySummary.progressObservations();
+            keyObservations = analytics.progressObservations();
             List<String> nextSteps = new ArrayList<>();
-            if (weeklySummary.getSuggestedNextSteps() != null) {
-                nextSteps.add(weeklySummary.getSuggestedNextSteps());
+            if (weeklySummary.suggestedNextSteps() != null) {
+                nextSteps.add(weeklySummary.suggestedNextSteps());
             }
-            report.setSuggestedNextSteps(nextSteps);
+            suggestedNextSteps = nextSteps;
         }
 
-        report.setSafetyNote(SAFETY_NOTE);
-
-        return report;
+        return new ProgressReportResponse(
+                generatedAt, startDate, endDate, userDisplayName,
+                analytics.totalUrgeLogs(), analytics.averageUrgeIntensity(), mostCommonTrigger,
+                analytics.completedExposureTasks(), analytics.pendingExposureTasks(),
+                analytics.completedDelayAttempts(), analytics.averageDelayMinutes(),
+                weeklySummaryText, keyObservations, suggestedNextSteps, SAFETY_NOTE
+        );
     }
 
     public String generateHtmlReport(User user, int days) {

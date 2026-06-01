@@ -22,7 +22,7 @@ public class MockAiClient implements AiClient {
 
     @Override
     public AiCoachResponseDto generateResponse(AiCoachRequestDto requestDto) {
-        String message = requestDto.getMessage().trim().toLowerCase();
+        String message = requestDto.message().trim().toLowerCase();
 
         // --- Weekly Summary ---
         if (containsAny(message, "weekly summary")) {

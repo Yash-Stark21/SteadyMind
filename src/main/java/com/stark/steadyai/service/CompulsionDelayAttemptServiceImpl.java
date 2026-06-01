@@ -49,21 +49,21 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
 
         CompulsionDelayAttempt attempt = new CompulsionDelayAttempt();
         attempt.setUser(user);
-        attempt.setTriggerDescription(request.getTriggerDescription());
-        attempt.setPlannedDelayMinutes(request.getPlannedDelayMinutes());
-        attempt.setCopingStrategyUsed(request.getCopingStrategyUsed());
-        attempt.setNotes(request.getNotes());
+        attempt.setTriggerDescription(request.triggerDescription());
+        attempt.setPlannedDelayMinutes(request.plannedDelayMinutes());
+        attempt.setCopingStrategyUsed(request.copingStrategyUsed());
+        attempt.setNotes(request.notes());
         attempt.setStartedAt(LocalDateTime.now());
 
-        if (request.getUrgeLogId() != null) {
-            UrgeLog urgeLog = urgeLogRepository.findByIdAndUser(request.getUrgeLogId(), user)
-                    .orElseThrow(() -> new ResourceNotFoundException("Urge log not found or unauthorized: " + request.getUrgeLogId()));
+        if (request.urgeLogId() != null) {
+            UrgeLog urgeLog = urgeLogRepository.findByIdAndUser(request.urgeLogId(), user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Urge log not found or unauthorized: " + request.urgeLogId()));
             attempt.setUrgeLog(urgeLog);
         }
 
-        if (request.getExposureTaskId() != null) {
-            ExposureTask exposureTask = exposureTaskRepository.findByIdAndUser(request.getExposureTaskId(), user)
-                    .orElseThrow(() -> new ResourceNotFoundException("Exposure task not found or unauthorized: " + request.getExposureTaskId()));
+        if (request.exposureTaskId() != null) {
+            ExposureTask exposureTask = exposureTaskRepository.findByIdAndUser(request.exposureTaskId(), user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Exposure task not found or unauthorized: " + request.exposureTaskId()));
             attempt.setExposureTask(exposureTask);
         }
 
@@ -90,10 +90,10 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
     public CompulsionDelayAttemptResponse updateDelayAttempt(Long id, CompulsionDelayAttemptUpdateRequest request) {
         CompulsionDelayAttempt attempt = getAttemptByIdAndUser(id);
 
-        attempt.setTriggerDescription(request.getTriggerDescription());
-        attempt.setPlannedDelayMinutes(request.getPlannedDelayMinutes());
-        attempt.setCopingStrategyUsed(request.getCopingStrategyUsed());
-        attempt.setNotes(request.getNotes());
+        attempt.setTriggerDescription(request.triggerDescription());
+        attempt.setPlannedDelayMinutes(request.plannedDelayMinutes());
+        attempt.setCopingStrategyUsed(request.copingStrategyUsed());
+        attempt.setNotes(request.notes());
 
         CompulsionDelayAttempt updatedAttempt = delayAttemptRepository.save(attempt);
         return mapToResponse(updatedAttempt);
@@ -107,8 +107,8 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
             throw new InvalidStateException("Cannot complete an attempt that is already completed or cancelled.");
         }
 
-        attempt.setActualDelayMinutes(request.getActualDelayMinutes());
-        attempt.setOutcome(request.getOutcome());
+        attempt.setActualDelayMinutes(request.actualDelayMinutes());
+        attempt.setOutcome(request.outcome());
         attempt.setEndedAt(LocalDateTime.now());
 
         CompulsionDelayAttempt updatedAttempt = delayAttemptRepository.save(attempt);
@@ -143,28 +143,20 @@ public class CompulsionDelayAttemptServiceImpl implements CompulsionDelayAttempt
     }
 
     private CompulsionDelayAttemptResponse mapToResponse(CompulsionDelayAttempt attempt) {
-        CompulsionDelayAttemptResponse response = new CompulsionDelayAttemptResponse();
-        response.setId(attempt.getId());
-        
-        if (attempt.getUrgeLog() != null) {
-            response.setUrgeLogId(attempt.getUrgeLog().getId());
-        }
-        
-        if (attempt.getExposureTask() != null) {
-            response.setExposureTaskId(attempt.getExposureTask().getId());
-        }
-
-        response.setTriggerDescription(attempt.getTriggerDescription());
-        response.setPlannedDelayMinutes(attempt.getPlannedDelayMinutes());
-        response.setActualDelayMinutes(attempt.getActualDelayMinutes());
-        response.setOutcome(attempt.getOutcome());
-        response.setCopingStrategyUsed(attempt.getCopingStrategyUsed());
-        response.setNotes(attempt.getNotes());
-        response.setStartedAt(attempt.getStartedAt());
-        response.setEndedAt(attempt.getEndedAt());
-        response.setCreatedAt(attempt.getCreatedAt());
-        response.setUpdatedAt(attempt.getUpdatedAt());
-
-        return response;
+        return new CompulsionDelayAttemptResponse(
+                attempt.getId(),
+                attempt.getUrgeLog() != null ? attempt.getUrgeLog().getId() : null,
+                attempt.getExposureTask() != null ? attempt.getExposureTask().getId() : null,
+                attempt.getTriggerDescription(),
+                attempt.getPlannedDelayMinutes(),
+                attempt.getActualDelayMinutes(),
+                attempt.getOutcome(),
+                attempt.getCopingStrategyUsed(),
+                attempt.getNotes(),
+                attempt.getStartedAt(),
+                attempt.getEndedAt(),
+                attempt.getCreatedAt(),
+                attempt.getUpdatedAt()
+        );
     }
 }

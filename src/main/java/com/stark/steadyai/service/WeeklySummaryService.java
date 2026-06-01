@@ -39,68 +39,67 @@ public class WeeklySummaryService {
 
         List<UrgeLog> logs = urgeLogRepository.findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(user, start, end);
 
-        WeeklySummaryResponse response = new WeeklySummaryResponse();
-        response.setStartDate(start.toLocalDate());
-        response.setEndDate(end.toLocalDate());
-        response.setSafetyNote("This is for self-reflection only and is not medical advice or a diagnosis.");
+        LocalDate startDate = start.toLocalDate();
+        LocalDate endDate = end.toLocalDate();
+        String safetyNote = "This is for self-reflection only and is not medical advice or a diagnosis.";
 
         if (logs.isEmpty()) {
-            response.setTotalUrgeLogs(0);
-            response.setAverageIntensity(0.0);
-            response.setMostCommonTrigger("N/A");
-            response.setHighestRiskPeriod("N/A");
-            response.setProgressObservations("No urge logs recorded this week. Start logging your moments to see progress.");
-            response.setRecurringPatterns("N/A");
-            response.setSuggestedNextSteps("Log an urge next time you feel one.");
-            return response;
+            return new WeeklySummaryResponse(
+                    startDate, endDate, 0, 0.0, "N/A", "N/A",
+                    "No urge logs recorded this week. Start logging your moments to see progress.",
+                    "N/A", "Log an urge next time you feel one.", safetyNote
+            );
         }
 
-        response.setTotalUrgeLogs(logs.size());
+        int totalUrgeLogs = logs.size();
+        double averageIntensity = Math.round(logs.stream().mapToInt(UrgeLog::getIntensityBefore).average().orElse(0.0) * 10.0) / 10.0;
 
-        double avgIntensity = logs.stream().mapToInt(UrgeLog::getIntensityBefore).average().orElse(0.0);
-        response.setAverageIntensity(Math.round(avgIntensity * 10.0) / 10.0);
-
-        String commonTrigger = logs.stream()
+        String mostCommonTrigger = logs.stream()
                 .collect(Collectors.groupingBy(UrgeLog::getTriggerText, Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse("Unknown");
-        response.setMostCommonTrigger(commonTrigger);
 
-        String commonPeriod = logs.stream()
+        String highestRiskPeriod = logs.stream()
                 .collect(Collectors.groupingBy(this::getTimeOfDay, Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse("Unknown");
-        response.setHighestRiskPeriod(commonPeriod);
 
-        AiCoachRequestDto req = new AiCoachRequestDto();
-        req.setMessage("weekly summary");
+        AiCoachRequestDto req = new AiCoachRequestDto("weekly summary");
         AiCoachResponseDto aiResponse = aiClient.generateResponse(req);
 
         String aiMessage = aiResponse.getUserFacingMessage();
         String[] parts = aiMessage.split("\\|");
-        
+
+        String progressObservations;
+        String recurringPatterns;
+        String suggestedNextSteps;
+
         if (parts.length >= 3) {
-            response.setProgressObservations(parts[0].replace("Progress:", "").trim());
-            response.setRecurringPatterns(parts[1].replace("Patterns:", "").trim());
-            response.setSuggestedNextSteps(parts[2].replace("Steps:", "").trim());
+            progressObservations = parts[0].replace("Progress:", "").trim();
+            recurringPatterns = parts[1].replace("Patterns:", "").trim();
+            suggestedNextSteps = parts[2].replace("Steps:", "").trim();
         } else {
-            response.setProgressObservations(aiMessage);
-            response.setRecurringPatterns("Consistency is key. Keep logging.");
-            response.setSuggestedNextSteps("Review your most common triggers and plan small delays.");
+            progressObservations = aiMessage;
+            recurringPatterns = "Consistency is key. Keep logging.";
+            suggestedNextSteps = "Review your most common triggers and plan small delays.";
         }
 
         // Safety override just in case AI returns diagnosis words
         if (aiMessage.toLowerCase().contains("diagnosis") || aiMessage.toLowerCase().contains("cured")) {
-            response.setProgressObservations("Keep practicing delays and noting your triggers.");
-            response.setRecurringPatterns("Focus on small steps.");
-            response.setSuggestedNextSteps("Discuss your logs with your care provider.");
+            progressObservations = "Keep practicing delays and noting your triggers.";
+            recurringPatterns = "Focus on small steps.";
+            suggestedNextSteps = "Discuss your logs with your care provider.";
         }
 
-        return response;
+        return new WeeklySummaryResponse(
+                startDate, endDate, totalUrgeLogs, averageIntensity,
+                mostCommonTrigger, highestRiskPeriod, progressObservations,
+                recurringPatterns, suggestedNextSteps, safetyNote
+        );
     }
 
     private String getTimeOfDay(UrgeLog log) {

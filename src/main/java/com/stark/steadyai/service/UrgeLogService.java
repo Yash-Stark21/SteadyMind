@@ -83,16 +83,16 @@ public class UrgeLogService {
     }
 
     private UrgeLogResponse mapToResponse(UrgeLog log) {
-        UrgeLogResponse response = new UrgeLogResponse();
-        response.setId(log.getId());
-        response.setTriggerText(log.getTriggerText());
-        response.setObsessionText(log.getObsessionText());
-        response.setCompulsionUrge(log.getCompulsionUrge());
-        response.setIntensityBefore(log.getIntensityBefore());
-        response.setDelayMinutes(log.getDelayMinutes());
-        response.setIntensityAfter(log.getIntensityAfter());
-        response.setCompulsionPerformed(log.getCompulsionPerformed());
-        response.setCreatedAt(log.getCreatedAt());
-        return response;
+        return new UrgeLogResponse(
+                log.getId(),
+                log.getTriggerText(),
+                log.getObsessionText(),
+                log.getCompulsionUrge(),
+                log.getIntensityBefore(),
+                log.getDelayMinutes(),
+                log.getIntensityAfter(),
+                log.getCompulsionPerformed(),
+                log.getCreatedAt()
+        );
     }
 }

@@ -60,99 +60,52 @@ public class ProgressAnalyticsService {
         List<ExposureTask> allExposureTasks = exposureTaskRepository.findByUserOrderByDifficultyLevelAsc(user);
         List<CompulsionDelayAttempt> allDelayAttempts = compulsionDelayAttemptRepository.findByUser(user);
 
-        ProgressAnalyticsResponse response = new ProgressAnalyticsResponse();
-
         // Urge metrics
-        buildUrgeMetrics(response, allUrgeLogs);
-
-        // Exposure metrics
-        buildExposureMetrics(response, allExposureTasks);
-
-        // Delay metrics
-        buildDelayMetrics(response, allDelayAttempts);
-
-        // 7-day trend
-        response.setSevenDayUrgeTrend(buildSevenDayTrend(user));
-
-        // Trigger breakdown
-        response.setTriggerBreakdown(buildTriggerBreakdown(allUrgeLogs));
-
-        // Intensity distribution
-        response.setIntensityDistribution(buildIntensityDistribution(allUrgeLogs));
-
-        // Progress observations
-        response.setProgressObservations(
-                buildProgressObservations(allUrgeLogs, allExposureTasks, allDelayAttempts, user));
-
-        // Safety note
-        response.setSafetyNote(SAFETY_NOTE);
-
-        return response;
-    }
-
-    // ---- Urge Metrics ----
-
-    private void buildUrgeMetrics(ProgressAnalyticsResponse response, List<UrgeLog> logs) {
-        response.setTotalUrgeLogs(logs.size());
-
-        if (logs.isEmpty()) {
-            response.setAverageUrgeIntensity(0.0);
-            response.setHighestUrgeIntensity(0);
-            return;
+        int totalUrgeLogs = allUrgeLogs.size();
+        double averageUrgeIntensity = 0.0;
+        int highestUrgeIntensity = 0;
+        if (!allUrgeLogs.isEmpty()) {
+            averageUrgeIntensity = Math.round(allUrgeLogs.stream()
+                    .filter(log -> log.getIntensityBefore() != null)
+                    .mapToInt(UrgeLog::getIntensityBefore)
+                    .average().orElse(0.0) * 10.0) / 10.0;
+            highestUrgeIntensity = allUrgeLogs.stream()
+                    .filter(log -> log.getIntensityBefore() != null)
+                    .mapToInt(UrgeLog::getIntensityBefore)
+                    .max().orElse(0);
         }
 
-        double avgIntensity = logs.stream()
-                .filter(log -> log.getIntensityBefore() != null)
-                .mapToInt(UrgeLog::getIntensityBefore)
-                .average()
-                .orElse(0.0);
-        response.setAverageUrgeIntensity(Math.round(avgIntensity * 10.0) / 10.0);
+        // Exposure metrics
+        int totalExposureTasks = allExposureTasks.size();
+        int completedExposureTasks = (int) allExposureTasks.stream()
+                .filter(t -> t.getStatus() == ExposureStatus.COMPLETED).count();
+        int pendingExposureTasks = (int) allExposureTasks.stream()
+                .filter(t -> t.getStatus() == ExposureStatus.PENDING).count();
 
-        int maxIntensity = logs.stream()
-                .filter(log -> log.getIntensityBefore() != null)
-                .mapToInt(UrgeLog::getIntensityBefore)
-                .max()
-                .orElse(0);
-        response.setHighestUrgeIntensity(maxIntensity);
-    }
-
-    // ---- Exposure Metrics ----
-
-    private void buildExposureMetrics(ProgressAnalyticsResponse response, List<ExposureTask> tasks) {
-        response.setTotalExposureTasks(tasks.size());
-
-        long completed = tasks.stream()
-                .filter(t -> t.getStatus() == ExposureStatus.COMPLETED)
-                .count();
-        response.setCompletedExposureTasks((int) completed);
-
-        long pending = tasks.stream()
-                .filter(t -> t.getStatus() == ExposureStatus.PENDING)
-                .count();
-        response.setPendingExposureTasks((int) pending);
-    }
-
-    // ---- Delay Metrics ----
-
-    private void buildDelayMetrics(ProgressAnalyticsResponse response, List<CompulsionDelayAttempt> attempts) {
-        response.setTotalDelayAttempts(attempts.size());
-
-        long completedCount = attempts.stream()
-                .filter(a -> a.getOutcome() == CompulsionDelayOutcome.SUCCESS)
-                .count();
-        response.setCompletedDelayAttempts((int) completedCount);
-
-        long cancelledCount = attempts.stream()
-                .filter(a -> a.getOutcome() == CompulsionDelayOutcome.CANCELLED)
-                .count();
-        response.setCancelledDelayAttempts((int) cancelledCount);
-
-        double avgDelay = attempts.stream()
+        // Delay metrics
+        int totalDelayAttempts = allDelayAttempts.size();
+        int completedDelayAttempts = (int) allDelayAttempts.stream()
+                .filter(a -> a.getOutcome() == CompulsionDelayOutcome.SUCCESS).count();
+        int cancelledDelayAttempts = (int) allDelayAttempts.stream()
+                .filter(a -> a.getOutcome() == CompulsionDelayOutcome.CANCELLED).count();
+        double averageDelayMinutes = Math.round(allDelayAttempts.stream()
                 .filter(a -> a.getActualDelayMinutes() != null)
                 .mapToInt(CompulsionDelayAttempt::getActualDelayMinutes)
-                .average()
-                .orElse(0.0);
-        response.setAverageDelayMinutes(Math.round(avgDelay * 10.0) / 10.0);
+                .average().orElse(0.0) * 10.0) / 10.0;
+
+        // Derived data
+        List<TrendPointResponse> sevenDayUrgeTrend = buildSevenDayTrend(user);
+        List<TriggerBreakdownResponse> triggerBreakdown = buildTriggerBreakdown(allUrgeLogs);
+        List<IntensityDistributionResponse> intensityDistribution = buildIntensityDistribution(allUrgeLogs);
+        List<String> progressObservations = buildProgressObservations(allUrgeLogs, allExposureTasks, allDelayAttempts, user);
+
+        return new ProgressAnalyticsResponse(
+                totalUrgeLogs, averageUrgeIntensity, highestUrgeIntensity,
+                totalExposureTasks, completedExposureTasks, pendingExposureTasks,
+                totalDelayAttempts, completedDelayAttempts, cancelledDelayAttempts, averageDelayMinutes,
+                sevenDayUrgeTrend, triggerBreakdown, intensityDistribution,
+                progressObservations, SAFETY_NOTE
+        );
     }
 
     // ---- 7-Day Trend ----

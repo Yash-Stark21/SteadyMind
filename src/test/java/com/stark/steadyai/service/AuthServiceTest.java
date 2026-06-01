@@ -30,10 +30,7 @@ public class AuthServiceTest {
 
     @Test
     void testRegisterUser_AssignsRoleUserAndEncodesPassword() {
-        RegisterRequest request = new RegisterRequest();
-        request.setName("John Doe");
-        request.setEmail("john@example.com");
-        request.setPassword("password123");
+        RegisterRequest request = new RegisterRequest("John Doe", "john@example.com", "password123");
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
@@ -52,8 +49,7 @@ public class AuthServiceTest {
 
     @Test
     void testRegisterUser_ThrowsIfEmailExists() {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("existing@example.com");
+        RegisterRequest request = new RegisterRequest(null, "existing@example.com", null);
 
         when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(new User()));
 

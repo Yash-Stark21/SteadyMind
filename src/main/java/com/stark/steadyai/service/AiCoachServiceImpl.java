@@ -52,7 +52,7 @@ public class AiCoachServiceImpl implements AiCoachService {
 
     @Override
     public AiCoachResponseDto processMessage(AiCoachRequestDto requestDto, User user) {
-        String userMessage = requestDto.getMessage().trim();
+        String userMessage = requestDto.message().trim();
 
         AiCoachResponseDto responseDto;
 

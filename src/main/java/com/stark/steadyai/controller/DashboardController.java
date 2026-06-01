@@ -34,7 +34,7 @@ public class DashboardController {
         List<ExposureTaskResponse> allTasks = exposureTaskService.getAllExposureTasksForCurrentUser();
         int totalExposureTasks = allTasks.size();
         long completedExposureTasks = allTasks.stream()
-                .filter(t -> t.getStatus() == ExposureStatus.COMPLETED)
+                .filter(t -> t.status() == ExposureStatus.COMPLETED)
                 .count();
 
         model.addAttribute("totalUrgeLogs", totalUrgeLogs);

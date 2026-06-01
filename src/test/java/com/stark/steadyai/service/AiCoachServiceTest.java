@@ -51,12 +51,11 @@ class AiCoachServiceTest {
         MockitoAnnotations.openMocks(this);
         user = new User();
         user.setId(1L);
-        requestDto = new AiCoachRequestDto();
     }
 
     @Test
     void aiClientFailureReturnsSafeFallback() {
-        requestDto.setMessage("I am anxious");
+        requestDto = new AiCoachRequestDto("I am anxious");
         when(aiSafetyService.isCrisisOrSelfHarm(any())).thenReturn(false);
         when(aiSafetyService.isReassuranceSeeking(any())).thenReturn(false);
         when(aiClient.generateResponse(any())).thenThrow(new RuntimeException("API down"));
@@ -78,7 +77,7 @@ class AiCoachServiceTest {
 
     @Test
     void invalidAiResponseReturnsSafeFallback() {
-        requestDto.setMessage("I am anxious");
+        requestDto = new AiCoachRequestDto("I am anxious");
         when(aiSafetyService.isCrisisOrSelfHarm(any())).thenReturn(false);
         when(aiSafetyService.isReassuranceSeeking(any())).thenReturn(false);
         AiCoachResponseDto invalidResponse = new AiCoachResponseDto();
@@ -101,7 +100,7 @@ class AiCoachServiceTest {
 
     @Test
     void reassuranceSeekingPreCheckBypassesAiClient() {
-        requestDto.setMessage("Can you promise?");
+        requestDto = new AiCoachRequestDto("Can you promise?");
         when(aiSafetyService.isCrisisOrSelfHarm(any())).thenReturn(false);
         when(aiSafetyService.isReassuranceSeeking(any())).thenReturn(true);
         
@@ -117,7 +116,7 @@ class AiCoachServiceTest {
 
     @Test
     void crisisPreCheckBypassesAiClient() {
-        requestDto.setMessage("I want to kill myself");
+        requestDto = new AiCoachRequestDto("I want to kill myself");
         when(aiSafetyService.isCrisisOrSelfHarm(any())).thenReturn(true);
         
         AiCoachResponseDto crisisDto = new AiCoachResponseDto();
@@ -134,7 +133,7 @@ class AiCoachServiceTest {
 
     @Test
     void validAiResponseIsSavedToRepository() {
-        requestDto.setMessage("Normal message");
+        requestDto = new AiCoachRequestDto("Normal message");
         when(aiSafetyService.isCrisisOrSelfHarm(any())).thenReturn(false);
         when(aiSafetyService.isReassuranceSeeking(any())).thenReturn(false);
         

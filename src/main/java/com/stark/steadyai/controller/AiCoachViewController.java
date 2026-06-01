@@ -43,7 +43,7 @@ public class AiCoachViewController {
     public String showAiCoach(Model model, Authentication authentication) {
         User user = getUser(authentication);
 
-        model.addAttribute("aiCoachRequest", new AiCoachRequestDto());
+        model.addAttribute("aiCoachRequest", new AiCoachRequestDto(null));
         model.addAttribute("recentMessages", aiCoachService.getRecentMessages(user));
 
         return "ai-coach";

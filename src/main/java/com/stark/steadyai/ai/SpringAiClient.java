@@ -28,7 +28,7 @@ public class SpringAiClient implements AiClient {
         try {
             String rawResponse = chatClient.prompt()
                     .system(buildSystemPrompt())
-                    .user(requestDto.getMessage())
+                    .user(requestDto.message())
                     .call()
                     .content();
 

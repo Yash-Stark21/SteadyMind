@@ -68,8 +68,8 @@ class WeeklySummaryServiceTest {
 
         WeeklySummaryResponse response = weeklySummaryService.getWeeklySummary();
 
-        assertEquals(0, response.getTotalUrgeLogs());
-        assertEquals("N/A", response.getMostCommonTrigger());
+        assertEquals(0, response.totalUrgeLogs());
+        assertEquals("N/A", response.mostCommonTrigger());
         verify(aiClient, never()).generateResponse(any());
     }
 
@@ -99,13 +99,13 @@ class WeeklySummaryServiceTest {
 
         WeeklySummaryResponse response = weeklySummaryService.getWeeklySummary();
 
-        assertEquals(3, response.getTotalUrgeLogs());
-        assertEquals(6.0, response.getAverageIntensity());
-        assertEquals("Stress", response.getMostCommonTrigger());
-        assertEquals("Evening", response.getHighestRiskPeriod());
-        assertEquals("Good.", response.getProgressObservations());
-        assertEquals("Evening stress.", response.getRecurringPatterns());
-        assertEquals("Delay.", response.getSuggestedNextSteps());
+        assertEquals(3, response.totalUrgeLogs());
+        assertEquals(6.0, response.averageIntensity());
+        assertEquals("Stress", response.mostCommonTrigger());
+        assertEquals("Evening", response.highestRiskPeriod());
+        assertEquals("Good.", response.progressObservations());
+        assertEquals("Evening stress.", response.recurringPatterns());
+        assertEquals("Delay.", response.suggestedNextSteps());
     }
 
     @Test
@@ -126,9 +126,9 @@ class WeeklySummaryServiceTest {
         WeeklySummaryResponse response = weeklySummaryService.getWeeklySummary();
 
         // Should use fallback text instead of the unsafe text
-        assertEquals("Keep practicing delays and noting your triggers.", response.getProgressObservations());
-        assertEquals("Focus on small steps.", response.getRecurringPatterns());
-        assertEquals("Discuss your logs with your care provider.", response.getSuggestedNextSteps());
+        assertEquals("Keep practicing delays and noting your triggers.", response.progressObservations());
+        assertEquals("Focus on small steps.", response.recurringPatterns());
+        assertEquals("Discuss your logs with your care provider.", response.suggestedNextSteps());
     }
 
     private void setCreatedAt(UrgeLog log, LocalDateTime time) {
