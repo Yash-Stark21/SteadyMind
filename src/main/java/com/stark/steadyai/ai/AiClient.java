@@ -6,9 +6,9 @@ import com.stark.steadyai.dto.AiCoachResponseDto;
 /**
  * Abstraction for AI response generation.
  *
- * Today: MockAiClient provides deterministic, keyword-based responses.
- * Later: A real implementation (e.g., SpringAiClient) can integrate with
- * OpenAI or another LLM provider without changing the service layer.
+ * The mock-ai profile uses MockAiClient for deterministic responses.
+ * The openai profile uses OpenAiCoachClient for real OpenAI-backed responses
+ * without changing the service layer.
  *
  * The AiCoachService never calls an AI provider directly — it always
  * goes through this interface.

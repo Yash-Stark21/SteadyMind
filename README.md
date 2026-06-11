@@ -35,11 +35,38 @@ The AI Coach uses a strict classification pipeline:
 ## Setup Instructions
 
 ### Environment Variables
-For AI features, set your OpenAI API key in the environment or `application.properties`:
+The app uses the `mock-ai` profile by default, so local development and tests do not need an API key.
+
+To enable real OpenAI-backed AI Coach responses, activate the `openai` profile and set the API key through environment variables. Do not commit real keys to `application.properties`, `.env`, or source files.
+
+PowerShell:
 ```
-SPRING_AI_OPENAI_API_KEY=your_api_key_here
+$env:SPRING_PROFILES_ACTIVE="openai"
+$env:OPENAI_API_KEY="your_api_key_here"
+.\mvnw.cmd spring-boot:run
 ```
-*Note: The project uses a `mock-ai` profile by default for local testing without an API key.*
+
+The OpenAI profile reads `OPENAI_API_KEY` first and falls back to `SPRING_AI_OPENAI_API_KEY` for compatibility.
+
+Reusable AI Coach call example:
+```java
+import com.stark.steadyai.ai.AiClient;
+import com.stark.steadyai.dto.AiCoachRequestDto;
+import com.stark.steadyai.dto.AiCoachResponseDto;
+
+public class ExampleCoachCaller {
+
+    private final AiClient aiClient;
+
+    public ExampleCoachCaller(AiClient aiClient) {
+        this.aiClient = aiClient;
+    }
+
+    public AiCoachResponseDto classifyMessage(String message) {
+        return aiClient.generateResponse(new AiCoachRequestDto(message));
+    }
+}
+```
 
 ### Database Setup
 The project defaults to an H2 in-memory database for immediate testing. To use MySQL, update `application.properties` with your database credentials.

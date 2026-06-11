@@ -2,10 +2,6 @@ package com.stark.steadyai.ai;
 
 import com.stark.steadyai.dto.AiCoachRequestDto;
 import com.stark.steadyai.dto.AiCoachResponseDto;
-import com.stark.steadyai.enums.CoachIntent;
-import com.stark.steadyai.enums.ResponseType;
-import com.stark.steadyai.enums.RiskLevel;
-import com.stark.steadyai.enums.SuggestedAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.AdvisorParams;
@@ -13,17 +9,24 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+/**
+ * OpenAI-backed AI coach client.
+ *
+ * Active only when the "openai" Spring profile is enabled. Other app services
+ * depend on the AiClient interface, so provider details and error handling stay
+ * contained in this module.
+ */
 @Component
 @Profile("openai")
-public class SpringAiClient implements AiClient {
+public class OpenAiCoachClient implements AiClient {
 
-    private static final Logger log = LoggerFactory.getLogger(SpringAiClient.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenAiCoachClient.class);
 
     private final ChatClient chatClient;
     private final AiResponseValidator validator;
 
-    public SpringAiClient(ChatClient.Builder chatClientBuilder,
-                          AiResponseValidator validator) {
+    public OpenAiCoachClient(ChatClient.Builder chatClientBuilder,
+                             AiResponseValidator validator) {
         this.chatClient = chatClientBuilder.build();
         this.validator = validator;
     }
@@ -47,14 +50,14 @@ public class SpringAiClient implements AiClient {
 
             if (validator.isInvalid(response)) {
                 log.warn("AI response failed validation. Returning safe fallback. Response: {}", response);
-                return safeFallbackResponse();
+                return validator.buildFallback();
             }
 
             return response;
 
         } catch (Exception e) {
             log.error("OpenAI/Spring AI response generation failed. Returning safe fallback.", e);
-            return safeFallbackResponse();
+            return validator.buildFallback();
         }
     }
 
@@ -64,19 +67,6 @@ public class SpringAiClient implements AiClient {
         }
 
         return requestDto.message().trim();
-    }
-
-    private AiCoachResponseDto safeFallbackResponse() {
-        AiCoachResponseDto dto = new AiCoachResponseDto();
-        dto.setIntent(CoachIntent.OUT_OF_SCOPE);
-        dto.setRiskLevel(RiskLevel.LOW);
-        dto.setResponseType(ResponseType.OUT_OF_SCOPE_MESSAGE);
-        dto.setDirectAnswerAllowed(false);
-        dto.setUserFacingMessage(
-                "I could not process that safely. Please try again with a clear message."
-        );
-        dto.setSuggestedAction(SuggestedAction.NONE);
-        return dto;
     }
 
     private String buildSystemPrompt() {
