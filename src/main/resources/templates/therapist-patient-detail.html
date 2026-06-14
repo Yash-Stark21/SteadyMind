@@ -235,7 +235,7 @@
 
             viewButton.disabled = true;
             try {
-                const res = await fetch(`/api/therapist/patients/${encodeURIComponent(patientId)}/ai/conversations/${encodeURIComponent(conversationId)}/messages`);
+                const res = await window.steadyApiFetch(`/api/therapist/patients/${encodeURIComponent(patientId)}/ai/conversations/${encodeURIComponent(conversationId)}/messages`);
                 if (!res.ok) {
                     throw new Error('Failed to load conversation');
                 }

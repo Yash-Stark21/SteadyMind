@@ -321,7 +321,7 @@
     // ========================================
     async function loadAttempts() {
         try {
-            const response = await fetch('/api/compulsion-delay-attempts');
+            const response = await window.steadyApiFetch('/api/compulsion-delay-attempts');
             if (!response.ok) throw new Error('Failed to load attempts');
             const attempts = await response.json();
 
@@ -552,7 +552,7 @@
         };
 
         try {
-            const response = await fetch('/api/compulsion-delay-attempts', {
+            const response = await window.steadyApiFetch('/api/compulsion-delay-attempts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -607,7 +607,7 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
 
         try {
-            const response = await fetch('/api/compulsion-delay-attempts/' + attemptId + '/complete', {
+            const response = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + attemptId + '/complete', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -635,7 +635,7 @@
         if (!confirm('Are you sure you want to give up on this delay? Every second you waited still counts.')) return;
 
         try {
-            const response = await fetch('/api/compulsion-delay-attempts/' + id + '/cancel', {
+            const response = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + id + '/cancel', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -650,7 +650,7 @@
         if (!confirm('Delete this delay attempt? This action cannot be undone.')) return;
 
         try {
-            const response = await fetch('/api/compulsion-delay-attempts/' + id, {
+            const response = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + id, {
                 method: 'DELETE'
             });
             if (!response.ok) throw new Error('Failed to delete attempt');
@@ -662,7 +662,7 @@
 
     async function viewDelayAttempt(id) {
         try {
-            const res = await fetch('/api/compulsion-delay-attempts/' + id);
+            const res = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + id);
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             document.getElementById('viewTriggerDesc').textContent = data.triggerDescription || '—';
@@ -679,7 +679,7 @@
 
     async function editDelayAttempt(id) {
         try {
-            const res = await fetch('/api/compulsion-delay-attempts/' + id);
+            const res = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + id);
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             document.getElementById('editAttemptId').value = data.id;
@@ -713,7 +713,7 @@
         };
 
         try {
-            const res = await fetch('/api/compulsion-delay-attempts/' + id, {
+            const res = await window.steadyApiFetch('/api/compulsion-delay-attempts/' + id, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

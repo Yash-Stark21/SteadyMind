@@ -161,17 +161,37 @@ class ApiSecurityIntegrationTest {
                         .param("password", PASSWORD))
                 .andExpect(status().isForbidden());
 
-        MvcResult loginResult = mockMvc.perform(post("/login")
-                        .with(csrf())
-                        .param("username", user.getEmail())
-                        .param("password", PASSWORD))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/dashboard"))
-                .andReturn();
-
-        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        MockHttpSession session = webSessionFor(user);
         mockMvc.perform(get("/dashboard").session(session))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void webSessionCanRequestAccessTokenForBrowserApiCalls() throws Exception {
+        MockHttpSession session = webSessionFor(user);
+
+        MvcResult tokenResult = mockMvc.perform(get("/auth/access-token")
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty())
+                .andReturn();
+
+        JsonNode body = objectMapper.readTree(tokenResult.getResponse().getContentAsString());
+        mockMvc.perform(get("/api/urge-logs")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + body.get("accessToken").asText()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void unauthenticatedRequestCannotGetBrowserAccessToken() throws Exception {
+        mockMvc.perform(get("/auth/access-token"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
     }
 
     private User ensureUser(String email, String name, Role role) {
@@ -194,6 +214,18 @@ class ApiSecurityIntegrationTest {
 
         JsonNode body = objectMapper.readTree(response);
         return "Bearer " + body.get("accessToken").asText();
+    }
+
+    private MockHttpSession webSessionFor(User user) throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/login")
+                        .with(csrf())
+                        .param("username", user.getEmail())
+                        .param("password", PASSWORD))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/dashboard"))
+                .andReturn();
+
+        return (MockHttpSession) loginResult.getRequest().getSession(false);
     }
 
     private String expiredTokenFor(User user) {

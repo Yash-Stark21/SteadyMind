@@ -212,7 +212,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        fetch('/api/progress/analytics')
+        window.steadyApiFetch('/api/progress/analytics')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('loadingSpinner').classList.add('d-none');
