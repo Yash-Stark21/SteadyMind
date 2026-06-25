@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * contained in this module.
  */
 @Component
-@Profile("openAI")
+@Profile("openai")
 public class OpenAiCoachClient implements AiClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiCoachClient.class);

@@ -100,6 +100,6 @@ Evidence:
 1. `LoginResponse` contains only `accessToken`, `tokenType`, `expiresAt`, and `user`.
 2. `AccessTokenResponse` contains only `accessToken`, `tokenType`, and `expiresAt`.
 3. There is no `refreshToken` field, DTO, entity, repository, service, or database table.
-4. There is no endpoint such as `/api/auth/refresh`, `/api/auth/logout`, or `/api/auth/revoke` for refresh-token exchange or revocation.
+4. There is no endpoint such as `/api/auth/refresh` or `/api/auth/revoke` for refresh-token exchange or revocation. `POST /api/auth/logout` is a stateless acknowledgement that tells the client to discard its bearer token.
 
 Because refresh tokens do not exist here, standalone API clients must re-authenticate with credentials after access-token expiry. Browser pages can obtain another access token only while their normal Spring web session remains authenticated.

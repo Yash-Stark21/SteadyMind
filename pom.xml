@@ -11,20 +11,27 @@
 	<groupId>com.stark</groupId>
 	<artifactId>steadyai</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<name>SteadyMind</name>
+	<description>Self-guided urge tracking, exposure planning, progress analytics, and guarded AI coaching.</description>
+	<url>https://github.com/Yash-Stark21/SteadyMind</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>Yash-Stark21</id>
+			<name>Yash Stark</name>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/Yash-Stark21/SteadyMind.git</connection>
+		<developerConnection>scm:git:https://github.com/Yash-Stark21/SteadyMind.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/Yash-Stark21/SteadyMind</url>
 	</scm>
 	<properties>
 		<java.version>25</java.version>
@@ -98,7 +105,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

@@ -124,7 +124,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/therapist/**").hasAuthority("ROLE_THERAPIST")
                         .requestMatchers("/api/ai/**").hasAnyAuthority("ROLE_USER", "ROLE_THERAPIST")

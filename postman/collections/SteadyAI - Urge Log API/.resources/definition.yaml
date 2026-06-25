@@ -1,7 +1,21 @@
 $kind: collection
 name: SteadyAI - Urge Log API
+description: |-
+  ## Test Credentials
+  The database seeds these users automatically (all share the password `password123`):
+  - `user@example.com` (ROLE_USER)
+  - `admin@example.com` (ROLE_ADMIN)
+  - `therapist@example.com` (ROLE_THERAPIST)
 variables:
   - key: baseUrl
     value: 'http://localhost:8080'
+  - key: userEmail
+    value: user@example.com
+  - key: adminEmail
+    value: admin@example.com
+  - key: therapistEmail
+    value: therapist@example.com
+  - key: password
+    value: password123
   - key: urgeLogId
     value: '1'

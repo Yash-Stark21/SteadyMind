@@ -74,6 +74,13 @@ public class AuthRestController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout() {
+        return ResponseEntity.ok(Map.of(
+                "message", "Logged out successfully. Discard the bearer token on the client."
+        ));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<AuthenticatedUserResponse> me(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

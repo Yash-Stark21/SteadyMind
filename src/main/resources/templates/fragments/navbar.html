@@ -3,7 +3,8 @@
 <body>
 
 <!-- Reusable navbar fragment included via th:replace in all pages -->
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark steadyai-navbar">
+<th:block th:fragment="navbar">
+<nav class="navbar navbar-expand-lg navbar-dark steadyai-navbar">
     <div class="container">
         <a class="navbar-brand fw-bold" th:href="@{/dashboard}">
             <span class="brand-icon">🧘</span> SteadyMind
@@ -51,6 +52,7 @@
 </nav>
 
 <script th:src="@{/js/steady-api.js}"></script>
+</th:block>
 
 </body>
 </html>

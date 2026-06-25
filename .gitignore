@@ -35,8 +35,3 @@ build/
 ### Environment Variables ###
 .env
 *.env
-
-### Documentation ###
-docs/ARCHITECTURE.md
-docs/API_ENDPOINTS.md
-docs/INTERVIEW_NOTES.md

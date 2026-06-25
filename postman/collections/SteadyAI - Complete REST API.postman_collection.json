@@ -1,0 +1,1233 @@
+{
+  "info": {
+    "_postman_id": "b2f46cb0-7895-49a6-b7b8-0f8c1b684b25",
+    "name": "SteadyAI - Complete REST API",
+    "description": "Detailed Postman collection for the SteadyAI `/api/**` REST surface. Collection-level auth uses JWT Bearer token from `{{accessToken}}`. Run an Auth > Login request first to populate the token.\n\n## Test Credentials\nThe database seeds these users automatically (all share the password `password123`):\n- `user@example.com` (ROLE_USER)\n- `admin@example.com` (ROLE_ADMIN)\n- `therapist@example.com` (ROLE_THERAPIST)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('No unexpected server error', function () {",
+          "  pm.expect(pm.response.code).to.be.below(500);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userEmail",
+      "value": "user@example.com",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "therapistEmail",
+      "value": "therapist@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "password123",
+      "type": "string"
+    },
+    {
+      "key": "registerName",
+      "value": "Postman API User",
+      "type": "string"
+    },
+    {
+      "key": "registerPassword",
+      "value": "password123",
+      "type": "string"
+    },
+    {
+      "key": "currentUserId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "currentUserRole",
+      "value": "ROLE_USER",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "therapistId",
+      "value": "3",
+      "type": "string"
+    },
+    {
+      "key": "patientId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "urgeLogId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "exposureTaskId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "delayAttemptId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "conversationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "targetDate",
+      "value": "2026-06-21T09:00:00",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Public registration/login plus authenticated current-user lookup. Login responses save `accessToken`, `currentUserId`, and role variables for later requests.",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{registerName}}\",\n  \"email\": \"postman.user+{{$timestamp}}@example.com\",\n  \"password\": \"{{registerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Public endpoint. Creates a new `ROLE_USER` account. Validation: `name`, valid `email`, and `password` of at least 6 characters are required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Register returns 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - User Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Public endpoint. Authenticates a regular user and stores the JWT in `{{accessToken}}` for collection-level Bearer auth."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login returns a Bearer token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(json.tokenType).to.eql('Bearer');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('currentUserId', json.user.id);",
+                  "pm.collectionVariables.set('currentUserRole', json.user.role);",
+                  "pm.collectionVariables.set('userId', json.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Admin Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Public endpoint. Authenticates the seeded admin account and stores an admin JWT for `/api/admin/**` routes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin login returns ROLE_ADMIN', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.user.role).to.eql('ROLE_ADMIN');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('currentUserId', json.user.id);",
+                  "pm.collectionVariables.set('currentUserRole', json.user.role);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Therapist Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapistEmail}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Public endpoint. Authenticates the seeded therapist account and stores a therapist JWT for `/api/therapist/**` routes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Therapist login returns ROLE_THERAPIST', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.user.role).to.eql('ROLE_THERAPIST');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "pm.collectionVariables.set('currentUserId', json.user.id);",
+                  "pm.collectionVariables.set('currentUserRole', json.user.role);",
+                  "pm.collectionVariables.set('therapistId', json.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Requires Bearer token. Returns the authenticated user's `id`, `name`, `email`, and `role`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Current user is returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.include.keys('id', 'name', 'email', 'role');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout - Current Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "Requires Bearer token. Stateless JWT logout endpoint; the server returns success and the client should discard the current token. The test script does not clear `{{accessToken}}` automatically so full collection runs can continue."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Logout accepted for current token', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().message).to.eql('Logged out successfully. Discard the bearer token on the client.');",
+                  "});",
+                  "// To make this request discard the Postman token variable, uncomment the next line.",
+                  "// pm.collectionVariables.unset('accessToken');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Urge Logs",
+      "description": "User-scoped CRUD for moment logs. Requires a `ROLE_USER` token.",
+      "item": [
+        {
+          "name": "Create Urge Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triggerText\": \"Saw a news article about contamination\",\n  \"obsessionText\": \"What if I got contaminated?\",\n  \"compulsionUrge\": \"Wash hands repeatedly\",\n  \"intensityBefore\": 8,\n  \"delayMinutes\": 5,\n  \"intensityAfter\": 4,\n  \"compulsionPerformed\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/urge-logs",
+            "description": "Creates an urge log. Validation: `triggerText`, `compulsionUrge`, `intensityBefore`, `delayMinutes`, and `compulsionPerformed` are required. `delayMinutes` must be one of `0`, `2`, `5`, `10`, `15`; intensity values are `1` to `10`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Urge log created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.id).to.be.a('number');",
+                  "});",
+                  "pm.collectionVariables.set('urgeLogId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Urge Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/urge-logs",
+            "description": "Lists the authenticated user's urge logs ordered by newest first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Urge log list returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Urge Log By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/urge-logs/{{urgeLogId}}",
+            "description": "Fetches one urge log owned by the authenticated user. Returns 404 if the ID is missing or belongs to another user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Urge log returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('urgeLogId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Urge Log",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triggerText\": \"Touched a public door handle\",\n  \"obsessionText\": \"What if I spread germs?\",\n  \"compulsionUrge\": \"Wash hands for a long time\",\n  \"intensityBefore\": 7,\n  \"delayMinutes\": 10,\n  \"intensityAfter\": 3,\n  \"compulsionPerformed\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/urge-logs/{{urgeLogId}}",
+            "description": "Replaces the editable fields for one owned urge log. Uses the same validation rules as create."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Urge log updated', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().triggerText).to.eql('Touched a public door handle');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Urge Log",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/urge-logs/{{urgeLogId}}",
+            "description": "Deletes one owned urge log. Returns 204 on success."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Urge log deleted', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Exposure Tasks",
+      "description": "User-scoped exposure task CRUD and status transitions. Requires a `ROLE_USER` token.",
+      "item": [
+        {
+          "name": "Create Exposure Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Touch door handle and delay washing\",\n  \"description\": \"Practice sitting with uncertainty for a short period.\",\n  \"difficultyLevel\": \"MEDIUM\",\n  \"targetDate\": \"{{targetDate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/exposure-tasks",
+            "description": "Creates an exposure task. Validation: `title` and `difficultyLevel` are required. Allowed difficulty values: `LOW`, `MEDIUM`, `HIGH`, `EXTREME`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(pm.response.json().id).to.be.a('number');",
+                  "});",
+                  "pm.collectionVariables.set('exposureTaskId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Exposure Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks",
+            "description": "Lists the authenticated user's exposure tasks ordered by difficulty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task list returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Exposure Task By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}",
+            "description": "Fetches one exposure task owned by the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('exposureTaskId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Exposure Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Touch door handle and wait 10 minutes\",\n  \"description\": \"Increase the delay window while avoiding reassurance checks.\",\n  \"difficultyLevel\": \"HIGH\",\n  \"targetDate\": \"{{targetDate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}",
+            "description": "Updates the title, description, difficulty, and target date for one owned exposure task."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task updated', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().difficultyLevel).to.eql('HIGH');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start Exposure Task",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}/start",
+            "description": "Marks an owned exposure task as `IN_PROGRESS`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task started', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('IN_PROGRESS');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Exposure Task",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}/complete",
+            "description": "Marks an owned exposure task as `COMPLETED` and sets `completedAt`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task completed', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Skip Exposure Task",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}/skip",
+            "description": "Marks an owned exposure task as `SKIPPED`. This status transition clears `completedAt`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task skipped', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().status).to.eql('SKIPPED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Exposure Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/exposure-tasks/{{exposureTaskId}}",
+            "description": "Deletes one owned exposure task. Returns 204 on success."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Exposure task deleted', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Compulsion Delay Attempts",
+      "description": "User-scoped delay attempt lifecycle. Requires a `ROLE_USER` token. Completion and cancellation are mutually exclusive once an outcome is set.",
+      "item": [
+        {
+          "name": "Create Delay Attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"urgeLogId\": null,\n  \"exposureTaskId\": null,\n  \"triggerDescription\": \"Felt the urge to check the lock again\",\n  \"plannedDelayMinutes\": 5,\n  \"copingStrategyUsed\": \"BREATHING\",\n  \"notes\": \"Trying a short delay before deciding what to do.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts",
+            "description": "Creates a delay attempt. Optional links: `urgeLogId` and `exposureTaskId` may be set to `{{urgeLogId}}` and `{{exposureTaskId}}` after creating those resources; linked IDs must belong to the current user. Allowed coping strategies: `BREATHING`, `WALKING`, `JOURNALING`, `COLD_WATER`, `CALL_SUPPORT`, `DISTRACTION`, `DELAY_TIMER`, `OTHER`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  pm.expect(pm.response.json().id).to.be.a('number');",
+                  "});",
+                  "pm.collectionVariables.set('delayAttemptId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Delay Attempts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts",
+            "description": "Lists the authenticated user's delay attempts ordered by newest first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt list returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Delay Attempt By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts/{{delayAttemptId}}",
+            "description": "Fetches one delay attempt owned by the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('delayAttemptId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Delay Attempt",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"triggerDescription\": \"Wanted to repeat a reassurance check\",\n  \"plannedDelayMinutes\": 10,\n  \"copingStrategyUsed\": \"JOURNALING\",\n  \"notes\": \"Updated plan after initial reflection.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts/{{delayAttemptId}}",
+            "description": "Updates an owned delay attempt before or after completion. `plannedDelayMinutes` must be positive when supplied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt updated', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().plannedDelayMinutes).to.eql(10);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete Delay Attempt",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"actualDelayMinutes\": 8,\n  \"outcome\": \"PARTIAL_SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts/{{delayAttemptId}}/complete",
+            "description": "Completes an owned delay attempt and sets `endedAt`. Allowed outcomes: `SUCCESS`, `PARTIAL_SUCCESS`, `FAILED`, `CANCELLED`. Returns 409 if the attempt already has an outcome."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt completed or already closed', function () {",
+                  "  pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Delay Attempt",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts/{{delayAttemptId}}/cancel",
+            "description": "Cancels an owned delay attempt by setting outcome to `CANCELLED`. Returns 409 if it was already completed or cancelled."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt cancelled or already closed', function () {",
+                  "  pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Delay Attempt",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/compulsion-delay-attempts/{{delayAttemptId}}",
+            "description": "Deletes one owned delay attempt. Returns 204 on success."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Delay attempt deleted', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI Coach",
+      "description": "AI coach and weekly summary endpoints. Requires `ROLE_USER` or `ROLE_THERAPIST` for `/api/ai/**`.",
+      "item": [
+        {
+          "name": "Send Coach Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I felt a strong urge to check the door lock. What can I reflect on before acting?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/ai/coach",
+            "description": "Submits a message to the AI coach pipeline. Validation: `message` is required and must be under 1000 characters. Non-therapist users receive user-facing response data with clinical metadata hidden."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Coach response returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.conversationId).to.be.a('number');",
+                  "  pm.expect(json.aiResponse).to.be.a('string');",
+                  "});",
+                  "pm.collectionVariables.set('conversationId', pm.response.json().conversationId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start New Conversation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/conversations/new",
+            "description": "Closes the current active AI conversation and returns its summary. Returns 204 when there is no active conversation to close."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Conversation closed or no active conversation exists', function () {",
+                  "  pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('conversationId', pm.response.json().conversationId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/conversations/{{conversationId}}/messages",
+            "description": "Lists all messages for one AI conversation owned by the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Conversation messages returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Weekly Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ai/weekly-summary",
+            "description": "Returns a 7-day AI-oriented summary for the authenticated user's urge logs and progress data."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Weekly summary returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.include.keys('startDate', 'endDate', 'safetyNote');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "description": "Progress analytics and report endpoints. Requires a `ROLE_USER` token.",
+      "item": [
+        {
+          "name": "Get Progress Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/progress/analytics",
+            "description": "Returns dashboard analytics including totals, seven-day trends, trigger breakdowns, intensity distribution, observations, and safety note."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Progress analytics returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.include.keys('totalUrgeLogs', 'sevenDayUrgeTrend', 'safetyNote');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Progress Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/progress",
+            "description": "Returns the authenticated user's 7-day progress report as JSON."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Progress report JSON returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.include.keys('generatedAt', 'startDate', 'endDate', 'safetyNote');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download Progress Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/progress/download",
+            "description": "Downloads the authenticated user's 7-day progress report as an HTML attachment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Progress report HTML downloaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only user and therapist assignment routes. Run Auth > Login - Admin Token before these requests.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/users",
+            "description": "Requires `ROLE_ADMIN`. Lists users with `id`, `name`, `email`, and `role`. The test script stores the first `ROLE_USER` as `{{userId}}` and first `ROLE_THERAPIST` as `{{therapistId}}`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin user list returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "const users = pm.response.json();",
+                  "const user = users.find(item => item.role === 'ROLE_USER');",
+                  "const therapist = users.find(item => item.role === 'ROLE_THERAPIST');",
+                  "if (user) pm.collectionVariables.set('userId', user.id);",
+                  "if (therapist) pm.collectionVariables.set('therapistId', therapist.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign Therapist",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/assign-therapist?therapistId={{therapistId}}&userId={{userId}}",
+            "description": "Requires `ROLE_ADMIN`. Assigns a therapist to a user using query parameters `therapistId` and `userId`. Re-running for the same pair returns 400 because duplicate assignments are rejected."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Therapist assignment created or already exists', function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Therapist",
+      "description": "Therapist-only patient visibility routes. Run Admin > Assign Therapist first, then Auth > Login - Therapist Token.",
+      "item": [
+        {
+          "name": "Get Assigned Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/therapist/patients",
+            "description": "Requires `ROLE_THERAPIST`. Lists patients assigned to the authenticated therapist. The test script stores the first patient ID in `{{patientId}}`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Assigned patients returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "const patients = pm.response.json();",
+                  "if (patients.length > 0) pm.collectionVariables.set('patientId', patients[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/therapist/patients/{{patientId}}/ai/conversations/{{conversationId}}/messages",
+            "description": "Requires `ROLE_THERAPIST`. Returns AI conversation messages for an assigned patient. The patient must be assigned to the therapist and the conversation must belong to that patient."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Patient conversation messages returned or missing until assigned data exists', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -99,6 +100,24 @@ class ApiSecurityIntegrationTest {
                         .content(loginJson("missing@example.com", PASSWORD)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+
+    @Test
+    void apiLogoutRequiresBearerToken() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+    }
+
+    @Test
+    void allBearerRolesCanLogoutWithoutSessionCookie() throws Exception {
+        for (User principal : List.of(user, admin, therapist)) {
+            mockMvc.perform(post("/api/auth/logout")
+                            .header(HttpHeaders.AUTHORIZATION, bearerTokenFor(principal)))
+                    .andExpect(status().isOk())
+                    .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
+                    .andExpect(jsonPath("$.message").value("Logged out successfully. Discard the bearer token on the client."));
+        }
     }
 
     @Test
